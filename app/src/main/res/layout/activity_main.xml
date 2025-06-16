@@ -7,4 +7,38 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <Button
+        android:id="@+id/load_button"
+        android:layout_width="114dp"
+        android:layout_height="64dp"
+        android:text="LOAD"
+        app:layout_constraintBottom_toTopOf="@+id/read_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.888" />
+
+    <Button
+        android:id="@+id/read_button"
+        android:layout_width="115dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="64dp"
+        android:text="READ"
+        app:layout_constraintBottom_toTopOf="@+id/status_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="249dp"
+        android:layout_height="85dp"
+        android:layout_marginBottom="208dp"
+        android:text="STATUS"
+        android:textAlignment="center"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
