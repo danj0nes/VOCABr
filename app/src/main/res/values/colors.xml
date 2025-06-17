@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="background_gray">#1E1F22</color>
+    <color name="card_gray">#2B2D30</color>
+    <color name="quitting_yellow">#E7940C</color>
+    <color name="correct_green">#4CAF50</color>
+    <color name="incorrect_red">#C13434</color>
+    <color name="term_white">#FAFAFA</color>
+    <color name="def_white">#FAFAFA</color>
+    <color name="learn_score_blue">#2E94D1</color>
+    <color name="button_burgundy">#DD3078</color>
 </resources>

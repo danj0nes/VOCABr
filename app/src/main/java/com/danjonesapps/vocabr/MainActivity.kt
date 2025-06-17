@@ -18,6 +18,8 @@ import java.io.FileOutputStream
 import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
+    private var fileName: String = "terms.csv" //need to add fileName saving functionality
+
     // Launcher for file picker
     private val csvFilePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
@@ -41,23 +43,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         val loadButton = findViewById<Button>(R.id.load_button)
+        val playButton = findViewById<Button>(R.id.play_button)
+
         loadButton.setOnClickListener {
             openCsvFilePicker()
         }
 
-        val readButton = findViewById<Button>(R.id.read_button)
-        val textView = findViewById<TextView>(R.id.status_text)
-
-        readButton.setOnClickListener {
-            val fileName = "imported.csv"  // or use a constant/shared name
-            val file = File(filesDir, fileName)
-
-            if (file.exists()) {
-                val content = readFirstValueFromCsv(file)
-                textView.text = content ?: "No data found"
-            } else {
-                Toast.makeText(this, "CSV file not found.", Toast.LENGTH_SHORT).show()
-            }
+        playButton.setOnClickListener {
+            val intent = Intent(this, LearnActivity::class.java)
+            intent.putExtra("fileName", this.fileName) // Pass variable
+            startActivity(intent) // Start LearnActivity
         }
     }
 
@@ -72,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     private fun saveCsvToInternalStorage(uri: Uri) {
         try {
             val fileName = getFileNameFromUri(uri) ?: "imported.csv"
+            this.fileName = fileName
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
             val outputFile = File(filesDir, fileName)
 
@@ -97,11 +93,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return null
-    }
-
-    private fun readFirstValueFromCsv(file: File): String? {
-        return file.useLines { lines ->
-            lines.firstOrNull()?.split(",")?.getOrNull(0)
-        }
     }
 }
