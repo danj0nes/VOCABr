@@ -21,26 +21,22 @@ import com.opencsv.bean.CsvBindByName
 import com.opencsv.bean.CsvToBeanBuilder
 import java.io.FileReader
 
-data class TermData(
-    @CsvBindByName(column = "unique_id")
-    val uniqueId: Int = 0,
-    @CsvBindByName(column = "learnt_score")
-    val learntScore: Double = 0.0,
-    @CsvBindByName(column = "term")
-    val term: String = "term",
-    @CsvBindByName(column = "definition")
-    val definition: String = "definition",
-    @CsvBindByName(column = "list_number")
-    val listNumber: Int = 0,
-    @CsvBindByName(column = "term_type")
-    val termType: String = "term_type",
-    @CsvBindByName(column = "dateLast_tested")
-    val dateLastTested: LocalDate? = null,
-    @CsvBindByName(column = "latest_results")
-    val latestResults: String = "No Recent Results",
-    @CsvBindByName(column = "tested_count")
-    val testedCount: Int = 0
-)
+var weightDaysSince: Int = 1
+var weightCorrect: Int = 1
+var weightTested: Int = 1
+
+var testedMaxCap: Int = 15
+var testedCapWeighting: Double = 0.9
+var latestResultsLength: Int = 10
+var daysSinceMinCap: Int = 30
+
+var desiredTermTypes: MutableList<String> = mutableListOf("verbe", "mot", "nom", "adjectif", "phrase", "other")
+var allowRepeatsAfter: Int = 15
+var minListNumber: Int? = null
+var maxListNumber: Int? = null
+const val BLANK_RESULTS_STRING: String = "No Recent Results"
+
+var todayDate: LocalDate = LocalDate.now()
 
 class LearnActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,7 +51,7 @@ class LearnActivity : AppCompatActivity() {
 
         val fileName = intent.getStringExtra("fileName") ?: "default.csv"
         val file = File(filesDir, fileName)
-        val df = loadTermDataFromCsv(file)
+        val df = loadTermDataFromCsv(file).toMutableList()
 
         Toast.makeText(this, "term loaded: ${df.size}", Toast.LENGTH_LONG).show()
     }
