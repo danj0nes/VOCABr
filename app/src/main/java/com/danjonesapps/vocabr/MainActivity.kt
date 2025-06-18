@@ -16,6 +16,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import android.content.ContentValues
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import java.io.OutputStream
 
 class MainActivity : AppCompatActivity() {
     private var fileName: String = "terms.csv" //need to add fileName saving functionality
@@ -44,6 +49,11 @@ class MainActivity : AppCompatActivity() {
 
         val loadButton = findViewById<Button>(R.id.load_button)
         val playButton = findViewById<Button>(R.id.play_button)
+        val exportButton = findViewById<Button>(R.id.export_button)
+
+        exportButton.setOnClickListener {
+            saveFileToDownloads(this.fileName)
+        }
 
         loadButton.setOnClickListener {
             openCsvFilePicker()
@@ -93,5 +103,55 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return null
+    }
+
+    private fun saveFileToDownloads(fileName: String) {
+        val inputFile = File(filesDir, fileName)
+        if (!inputFile.exists()) {
+            Toast.makeText(this, "File not found: $fileName", Toast.LENGTH_SHORT).show()
+        }
+
+        try {
+            val mimeType = "text/csv"
+            val outputStream: OutputStream?
+            val resolver = contentResolver
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, mimeType)
+                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                    put(MediaStore.Downloads.IS_PENDING, 1) //mark as being written
+                }
+
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                if (uri == null) {
+                    Toast.makeText(this, "Failed to create download file", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                outputStream = resolver.openOutputStream(uri)
+                inputFile.inputStream().use { input ->
+                    outputStream?.use { out ->
+                        input.copyTo(out)
+                    }
+                }
+
+                values.clear()
+                values.put(MediaStore.Downloads.IS_PENDING, 0) //mark as no longer being written
+                resolver.update(uri, values, null, null) //now visible to other apps
+
+            } else { //if legacy
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val outputFile = File(downloadsDir, fileName)
+                inputFile.copyTo(outputFile, overwrite = true)
+            }
+
+            Toast.makeText(this, "File saved to Downloads", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 }

@@ -8,29 +8,85 @@
     android:background="@color/background_gray"
     tools:context=".MainActivity">
 
+    <com.danjonesapps.vocabr.DiagonalBackgroundView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+    <TextView
+        android:id="@+id/text_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="VOCABr"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/cascadia_mono"
+        android:textColor="@color/term_white"
+        app:layout_constraintVertical_bias="0.2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Smaller Text Below and Slightly to the Right -->
+    <TextView
+        android:id="@+id/subText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="by dan jones"
+        android:textSize="16sp"
+        android:fontFamily="@font/cascadia_mono"
+        android:textColor="@color/term_white"
+        app:layout_constraintTop_toBottomOf="@id/text_logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBaseline_toBaselineOf="@id/text_logo"
+        android:translationY="20dp"
+        android:translationX="20dp" />
+
     <Button
         android:id="@+id/load_button"
-        android:layout_width="114dp"
-        android:layout_height="64dp"
-        android:text="LOAD"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
-        app:layout_constraintBottom_toTopOf="@+id/play_button"
+        android:backgroundTint="@color/invisible"
+        android:text="[Load]"
+        android:textColor="@color/button_burgundy"
+        android:textSize="25sp"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.888" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/play_button"
-        android:layout_width="115dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="324dp"
-        android:text="PLAY"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
+        android:backgroundTint="@color/invisible"
+        android:text="[Play]"
+        android:textColor="@color/button_burgundy"
+        android:textSize="25sp"
+        app:layout_constraintVertical_bias="0.65"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/export_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cascadia_mono"
+        android:backgroundTint="@color/invisible"
+        android:text="[Export]"
+        android:textColor="@color/button_burgundy"
+        android:textSize="25sp"
+        app:layout_constraintVertical_bias="0.8"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
