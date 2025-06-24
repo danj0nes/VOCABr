@@ -1,5 +1,6 @@
 package com.danjonesapps.vocabr
 
+import android.widget.Button
 import com.opencsv.bean.CsvBindByName
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -36,6 +37,15 @@ data class SelectedTerm(
     val learntScore: Float,
     val repeatIncorrect: Boolean
 )
+
+enum class ButtonCommand {
+    QUIT,
+    SAVE,
+    BACK,
+    NOT,
+    SHOW,
+    GOT
+}
 
 fun calcLearntScore(df: MutableList<TermData>, uniqueIds: List<Int>?= null): MutableList<TermData> {
     fun minMax(min: Float, max: Float, value: Float, inverse: Boolean = false): Float {
@@ -257,3 +267,8 @@ fun getTop(
 
     return Quad(recent, repeatIncorrectIds, futureTerms, data)
 }
+
+fun setButtonsEnabled(buttons: List<Button>, enabled: Boolean) {
+    buttons.forEach { it.isEnabled = enabled }
+}
+
