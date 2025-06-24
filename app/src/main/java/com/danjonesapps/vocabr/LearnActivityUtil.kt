@@ -27,7 +27,17 @@ data class TermData(
     var testedCount: Int = 0
 )
 
-fun calcLearntScore(df: MutableList<TermData>, uniqueIds: MutableList<Int>?= null): MutableList<TermData> {
+data class Quad<A, B, C, D>(val recent: A, val repeatIncorrectIds: B, val futureTerms: C, val selectedTerm: D)
+
+data class SelectedTerm(
+    val id: Int,
+    val term: String,
+    val definition: String,
+    val learntScore: Float,
+    val repeatIncorrect: Boolean
+)
+
+fun calcLearntScore(df: MutableList<TermData>, uniqueIds: List<Int>?= null): MutableList<TermData> {
     fun minMax(min: Float, max: Float, value: Float, inverse: Boolean = false): Float {
         return if (max > min) {
             val result = (value - min) / (max - min)
@@ -100,4 +110,150 @@ fun calcLearntScore(df: MutableList<TermData>, uniqueIds: MutableList<Int>?= nul
     }
 
     return df
+}
+
+
+fun sortTerms(df: MutableList<TermData>): MutableList<TermData> {
+    val shuffledList = df.shuffled()
+    return shuffledList.sortedBy { it.learntScore }.toMutableList()
+}
+
+
+fun saveResult(
+    df: MutableList<TermData>,
+    recent: MutableList<Triple<Int, Boolean, Boolean>>,
+    repeatIncorrectIds: MutableList<Pair<Int, Int>>,
+    terminating: Boolean = false,
+    recentGap: Int = 0
+): MutableList<TermData> {
+    var recalculateAll: Boolean = false
+
+    //# if terminating, save results of all incorrect terms waiting to be repeated
+    if (terminating) {
+        for ((repeatIncorrectId, _) in repeatIncorrectIds) {
+            recent.add(Triple(repeatIncorrectId, false, true))
+        }
+    }
+
+    if (recent.isEmpty()) {
+        return df
+    }
+
+    for ((index, triple) in recent.withIndex()) {
+        val (id, isCorrect, repeatIncorrect) = triple
+
+        if (isCorrect || terminating) {
+            // if max tested_count will be broken then recalculateAll ~all learnt scores
+            val row = df.find { it.uniqueId == id } ?: continue
+
+            if (!recalculateAll) {
+                val testedCount = row.testedCount
+                val maxTested = df.maxOfOrNull { it.testedCount } ?: 0
+
+                if (testedCount == maxTested && testedCount >= testedMaxCap) {
+                    recalculateAll = true
+                }
+            }
+
+            // Update date_last_tested
+            row.dateLastTested = todayDate
+
+            // Update latest_results
+            val prefix = if (repeatIncorrect) "X" else "O"
+            row.latestResults = if (row.latestResults != BLANK_RESULTS_STRING) {
+                val updated = prefix + row.latestResults
+                if (updated.length > latestResultsLength) {
+                    updated.substring(0, latestResultsLength)
+                } else updated
+            } else {
+                prefix
+            }
+
+            // Increment tested_count
+            row.testedCount += 1
+        } else {
+            // Handle incorrect term repeat
+            repeatIncorrectIds.add(Pair(id, index + recentGap))
+        }
+    }
+
+    // Final return
+    return calcLearntScore(
+        df,
+        if (recalculateAll) null else recent.map { it.first } // IDs only
+    )
+}
+
+
+fun getTop(
+    df: MutableList<TermData>,
+    recent: MutableList<Triple<Int, Boolean, Boolean>>,
+    repeatIncorrectIds: MutableList<Pair<Int, Int>>,
+    futureTerms: MutableList<Pair<Int, Boolean>>,
+    reversing: Boolean = false,
+    quitting: Boolean = false
+): Quad<
+        MutableList<Triple<Int, Boolean, Boolean>>, // recent
+        MutableList<Pair<Int, Int>>,                // repeatIncorrectIds
+        MutableList<Pair<Int, Boolean>>,            // futureTerms
+        SelectedTerm?                               // selected term
+        > {
+
+    // Filter df by desired term types and list number range, then map by uniqueId for fast lookup
+    val tempDf: MutableList<TermData> = df.filter { row ->
+        row.termType in desiredTermTypes
+    }.toMutableList()
+
+    fun termData(id: Int, repeat: Boolean): SelectedTerm? {
+        val row = tempDf.find { it.uniqueId == id } ?: return null
+        return SelectedTerm(
+            id = id,
+            term = row.term,
+            definition = row.definition,
+            learntScore = row.learntScore,
+            repeatIncorrect = repeat
+        )
+    }
+
+    var data: SelectedTerm? = null
+
+    // 1. Pick from futureTerms
+    if (futureTerms.isNotEmpty()) {
+        val (id, repeatIncorrect) = if (!reversing) {
+            futureTerms.removeAt(0)
+        } else {
+            // Removing last element from recent and taking id and repeatIncorrect flags
+            val (rid, _, repInc) = recent.removeAt(recent.lastIndex)
+            rid to repInc
+        }
+        data = termData(id, repeatIncorrect)
+    }
+
+    // 2. Pick from repeatIncorrectIds
+    if (data == null && repeatIncorrectIds.isNotEmpty()) {
+        if (repeatIncorrectIds[0].second == 0 || quitting) {
+            val (id, _) = repeatIncorrectIds.removeAt(0)
+            data = termData(id, true)
+        }
+    }
+
+    // 3. Pick from filtered df
+    if (data == null && !quitting) {
+        val avoidIds = recent.map { it.first }.toSet()
+        for (term in tempDf) {
+            if (term.uniqueId !in avoidIds) {
+                data = termData(term.uniqueId, false)
+                break
+            }
+        }
+    }
+
+    // Reduce delay for repeatIncorrectIds if a new term was selected
+    if (data != null) {
+        repeatIncorrectIds.replaceAll { (id, delay) ->
+            id to if (delay > 0) delay - 1 else delay
+        }
+    }
+
+    return Quad(recent, repeatIncorrectIds, futureTerms, data)
 }
