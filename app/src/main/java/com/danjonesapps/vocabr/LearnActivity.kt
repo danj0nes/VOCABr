@@ -39,7 +39,7 @@ const val BLANK_RESULTS_STRING: String = "No Recent Results"
 var todayDate: LocalDate = LocalDate.now()
 
 class LearnActivity : AppCompatActivity() {
-    // buttons and textviews
+    // buttons and text views
     private lateinit var quitButton: Button
     private lateinit var saveButton: Button
     private lateinit var backButton: Button
@@ -66,6 +66,8 @@ class LearnActivity : AppCompatActivity() {
     private var showingTerm: Boolean = false
 
     private var waitingForCommand: Boolean = false
+
+    private var file: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // android studio defaults
@@ -103,6 +105,7 @@ class LearnActivity : AppCompatActivity() {
 
         val fileName = intent.getStringExtra("fileName") ?: "default.csv"
         val file = File(filesDir, fileName)
+        this.file = file
         val terms = loadTermDataFromCsv(file).toMutableList()
 
         val updatedDF = calcLearntScore(df)
@@ -172,10 +175,58 @@ class LearnActivity : AppCompatActivity() {
         val topTerm: SelectedTerm = selectedTerm ?: return // change
 
         if (buttonCommand == ButtonCommand.QUIT) {
+            if (quitting) {
+                quitting = true
 
+                // adds all incorrect terms to repeat_incorrect
+                df = saveResult(
+                    df = df,
+                    recent = recent,
+                    repeatIncorrectIds = repeatIncorrectIds
+                )
+                saveFile()
+
+                // keep only repeat incorrect terms of future_terms
+                futureTerms = futureTerms.filter { it.second }.toMutableList()
+
+                // ensure than term on screen is chosen again
+                if (topTerm.repeatIncorrect) {
+                    futureTerms.add(0, Pair(topTerm.id, true))
+                }
+
+                recent.clear()
+                correct = 0
+                incorrect = 0
+            }
+            else { // TERMINATE
+                // ensure that term on screen if gotten wrong is saved as gotten wrong
+                if (topTerm.repeatIncorrect) {
+                    repeatIncorrectIds.add(0, Pair(topTerm.id, 0))
+                }
+
+                // add all repeat incorrect terms in future_terms to repeat_incorrect_ids
+                repeatIncorrectIds.addAll(
+                    futureTerms.filter { it.second }.map { Pair(it.first, 0) }
+                )
+                saveAndEnd()
+                return
+            }
         }
         else if (buttonCommand == ButtonCommand.SAVE) {
+            df = saveResult(
+                df = df,
+                recent = recent,
+                repeatIncorrectIds = repeatIncorrectIds,
+                recentGap = (recentLength - recent.size)
+            )
+            saveFile()
 
+            // ensure than term on screen is chosen again
+            futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
+
+            recent.clear()
+            correct = 0
+            incorrect = 0
         }
         else if (buttonCommand == ButtonCommand.BACK && recent.isNotEmpty()) {
             if (!recent.last().third) {
@@ -187,7 +238,6 @@ class LearnActivity : AppCompatActivity() {
             }
             futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
             reversing = true
-            showTerm()
         }
         else if (buttonCommand == ButtonCommand.NOT) {
             recent.add(Triple(topTerm.id, false, topTerm.repeatIncorrect))
@@ -195,7 +245,6 @@ class LearnActivity : AppCompatActivity() {
                 incorrect++
             }
             continueToNext()
-            showTerm()
         }
         else if (buttonCommand == ButtonCommand.GOT) {
             recent.add(Triple(topTerm.id, true, topTerm.repeatIncorrect))
@@ -203,7 +252,6 @@ class LearnActivity : AppCompatActivity() {
                 correct++
             }
             continueToNext()
-            showTerm()
         }
         else if (buttonCommand == ButtonCommand.SHOW) {
             if (showingTerm) {
@@ -214,7 +262,9 @@ class LearnActivity : AppCompatActivity() {
             }
             showingTerm = !showingTerm
             waitingForCommand = true
+            return
         }
+        showTerm()
     }
 
     private fun continueToNext(){
@@ -230,6 +280,10 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun saveAndEnd(){
+        return
+    }
+
+    private fun saveFile(){
         return
     }
 }
