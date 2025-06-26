@@ -116,7 +116,7 @@
 
     <Button
         android:id="@+id/button_quit"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
         android:backgroundTint="@color/card_gray"
@@ -132,7 +132,7 @@
 
     <Button
         android:id="@+id/button_save"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
         android:backgroundTint="@color/card_gray"
@@ -148,7 +148,7 @@
 
     <Button
         android:id="@+id/button_back"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
         android:backgroundTint="@color/card_gray"
@@ -164,11 +164,12 @@
 
     <Button
         android:id="@+id/button_correct"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
+        android:textStyle="bold"
         android:backgroundTint="@color/correct_green"
-        android:text="Got"
+        android:text="✓"
         android:textColor="@color/term_white"
         android:textSize="20sp"
         app:layout_constraintHorizontal_bias="0.9"
@@ -180,11 +181,12 @@
 
     <Button
         android:id="@+id/button_incorrect"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
+        android:textStyle="bold"
         android:backgroundTint="@color/incorrect_red"
-        android:text="Not"
+        android:text="X"
         android:textColor="@color/term_white"
         android:textSize="20sp"
         app:layout_constraintHorizontal_bias="0.1"
@@ -196,7 +198,7 @@
 
     <Button
         android:id="@+id/button_show"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
         android:backgroundTint="@color/learn_score_blue"

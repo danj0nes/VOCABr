@@ -5,23 +5,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.app.Activity
 import android.content.Intent
-import android.net.Uri
-import android.provider.OpenableColumns
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
 import java.time.LocalDate
-import com.opencsv.bean.CsvBindByName
-import com.opencsv.bean.CsvToBeanBuilder
-import java.io.FileReader
-import androidx.core.content.ContextCompat
 
 var weightDaysSince: Int = 1
 var weightCorrect: Int = 1
@@ -81,48 +71,24 @@ class LearnActivity : AppCompatActivity() {
         }
         // end of android studio defaults
 
-        //buttons
-        quitButton = findViewById(R.id.button_quit)
-        quitButton.setOnClickListener { buttonPressed(ButtonCommand.QUIT) }
-        saveButton = findViewById(R.id.button_save)
-        saveButton.setOnClickListener { buttonPressed(ButtonCommand.SAVE) }
-        backButton = findViewById(R.id.button_back)
-        backButton.setOnClickListener { buttonPressed(ButtonCommand.BACK) }
-        correctButton = findViewById(R.id.button_correct)
-        correctButton.setOnClickListener { buttonPressed(ButtonCommand.GOT) }
-        incorrectButton = findViewById(R.id.button_incorrect)
-        incorrectButton.setOnClickListener { buttonPressed(ButtonCommand.NOT) }
-        showButton = findViewById(R.id.button_show)
-        showButton.setOnClickListener { buttonPressed(ButtonCommand.SHOW) }
+        initViews()
 
-        //text views
-        learntScoreTextView = findViewById(R.id.text_learnt_score)
-        termTextView = findViewById(R.id.text_term)
-        quittingTextView = findViewById(R.id.text_quitting)
-        correctTextView = findViewById(R.id.text_correct)
-        incorrectTextView = findViewById(R.id.text_incorrect)
+        val fileName = intent.getStringExtra("fileName") ?: run {
+            terminate()
+            return
+        }
 
-
-        val fileName = intent.getStringExtra("fileName") ?: "default.csv"
         val file = File(filesDir, fileName)
         this.file = file
+
+        // add checks!!!!!!!!!!!!!!
         val terms = loadTermDataFromCsv(file).toMutableList()
 
-        val updatedDF = calcLearntScore(df)
+        val updatedDF = calcLearntScore(terms)
         df = updatedDF
         recentLength = minOf(updatedDF.size - 1, allowRepeatsAfter)
 
         showTerm()
-    }
-
-    private fun loadTermDataFromCsv(file: File): List<TermData> {
-        file.bufferedReader().use { reader ->
-            return CsvToBeanBuilder<TermData>(reader)
-                .withType(TermData::class.java)
-                .withIgnoreLeadingWhiteSpace(true)
-                .build()
-                .parse()
-        }
     }
 
     private fun showTerm(){
@@ -131,10 +97,9 @@ class LearnActivity : AppCompatActivity() {
         futureTerms = quad.futureTerms
         repeatIncorrectIds = quad.repeatIncorrectIds
 
-
-        val topTerm: SelectedTerm? = quad.selectedTerm
-        if (topTerm == null) {
-            saveAndEnd()
+        val topTerm: SelectedTerm = quad.selectedTerm ?: run {
+            saveFile()
+            terminate()
             return
         }
         selectedTerm = topTerm
@@ -175,7 +140,7 @@ class LearnActivity : AppCompatActivity() {
         val topTerm: SelectedTerm = selectedTerm ?: return // change
 
         if (buttonCommand == ButtonCommand.QUIT) {
-            if (quitting) {
+            if (!quitting) {
                 quitting = true
 
                 // adds all incorrect terms to repeat_incorrect
@@ -184,7 +149,6 @@ class LearnActivity : AppCompatActivity() {
                     recent = recent,
                     repeatIncorrectIds = repeatIncorrectIds
                 )
-                saveFile()
 
                 // keep only repeat incorrect terms of future_terms
                 futureTerms = futureTerms.filter { it.second }.toMutableList()
@@ -208,7 +172,9 @@ class LearnActivity : AppCompatActivity() {
                 repeatIncorrectIds.addAll(
                     futureTerms.filter { it.second }.map { Pair(it.first, 0) }
                 )
-                saveAndEnd()
+
+                saveFile()
+                terminate()
                 return
             }
         }
@@ -219,7 +185,7 @@ class LearnActivity : AppCompatActivity() {
                 repeatIncorrectIds = repeatIncorrectIds,
                 recentGap = (recentLength - recent.size)
             )
-            saveFile()
+            saveFile(verbose = true)
 
             // ensure than term on screen is chosen again
             futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
@@ -228,16 +194,22 @@ class LearnActivity : AppCompatActivity() {
             correct = 0
             incorrect = 0
         }
-        else if (buttonCommand == ButtonCommand.BACK && recent.isNotEmpty()) {
-            if (!recent.last().third) {
-                if (recent.last().second) {
-                    correct--
-                } else {
-                    incorrect--
+        else if (buttonCommand == ButtonCommand.BACK) {
+            if (recent.isNotEmpty()) {
+                if (!recent.last().third) {
+                    if (recent.last().second) {
+                        correct--
+                    } else {
+                        incorrect--
+                    }
                 }
+                futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
+                reversing = true
             }
-            futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
-            reversing = true
+            else {
+                waitingForCommand = true
+                return
+            }
         }
         else if (buttonCommand == ButtonCommand.NOT) {
             recent.add(Triple(topTerm.id, false, topTerm.repeatIncorrect))
@@ -279,11 +251,44 @@ class LearnActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveAndEnd(){
-        return
+    private fun terminate() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish() // closes the current activity so user cannot use back
     }
 
-    private fun saveFile(){
-        return
+    private fun saveFile(verbose: Boolean = false){
+        val tempFile: File = file ?: run {
+            Toast.makeText(this, "Saving Error.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        saveTermDataToCsv(df, tempFile)
+
+        if (verbose) {
+            Toast.makeText(this, "Saved Successfully.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun initViews() {
+        //buttons
+        quitButton = findViewById(R.id.button_quit)
+        quitButton.setOnClickListener { buttonPressed(ButtonCommand.QUIT) }
+        saveButton = findViewById(R.id.button_save)
+        saveButton.setOnClickListener { buttonPressed(ButtonCommand.SAVE) }
+        backButton = findViewById(R.id.button_back)
+        backButton.setOnClickListener { buttonPressed(ButtonCommand.BACK) }
+        correctButton = findViewById(R.id.button_correct)
+        correctButton.setOnClickListener { buttonPressed(ButtonCommand.GOT) }
+        incorrectButton = findViewById(R.id.button_incorrect)
+        incorrectButton.setOnClickListener { buttonPressed(ButtonCommand.NOT) }
+        showButton = findViewById(R.id.button_show)
+        showButton.setOnClickListener { buttonPressed(ButtonCommand.SHOW) }
+
+        //text views
+        learntScoreTextView = findViewById(R.id.text_learnt_score)
+        termTextView = findViewById(R.id.text_term)
+        quittingTextView = findViewById(R.id.text_quitting)
+        correctTextView = findViewById(R.id.text_correct)
+        incorrectTextView = findViewById(R.id.text_incorrect)
     }
 }

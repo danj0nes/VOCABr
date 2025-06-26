@@ -1,30 +1,35 @@
 package com.danjonesapps.vocabr
 
-import android.widget.Button
 import com.opencsv.bean.CsvBindByName
+import com.opencsv.bean.CsvToBeanBuilder
+import com.opencsv.bean.StatefulBeanToCsvBuilder
+import java.io.File
+import java.io.FileWriter
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import com.opencsv.bean.CsvDate
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 data class TermData(
-    @CsvBindByName(column = "unique_id")
+    @CsvBindByName(column = "UNIQUE_ID")
     var uniqueId: Int = 0,
-    @CsvBindByName(column = "learnt_score")
+    @CsvBindByName(column = "LEARNT_SCORE")
     var learntScore: Float = 0f,
-    @CsvBindByName(column = "term")
+    @CsvBindByName(column = "TERM")
     var term: String = "term",
-    @CsvBindByName(column = "definition")
+    @CsvBindByName(column = "DEFINITION")
     var definition: String = "definition",
-    @CsvBindByName(column = "list_number")
+    @CsvBindByName(column = "LIST_NUMBER")
     var listNumber: Int = 0,
-    @CsvBindByName(column = "term_type")
+    @CsvBindByName(column = "TERM_TYPE")
     var termType: String = "term_type",
-    @CsvBindByName(column = "dateLast_tested")
+    @CsvBindByName(column = "DATE_LAST_TESTED")
+    @CsvDate("yyyy-MM-dd")
     var dateLastTested: LocalDate? = null,
-    @CsvBindByName(column = "latest_results")
+    @CsvBindByName(column = "LATEST_RESULTS")
     var latestResults: String = "No Recent Results",
-    @CsvBindByName(column = "tested_count")
+    @CsvBindByName(column = "TESTED_COUNT")
     var testedCount: Int = 0
 )
 
@@ -119,7 +124,7 @@ fun calcLearntScore(df: MutableList<TermData>, uniqueIds: List<Int>?= null): Mut
         termData.learntScore = BigDecimal(result.toString()).setScale(4, RoundingMode.HALF_UP).toFloat()
     }
 
-    return df
+    return sortTerms(df)
 }
 
 
@@ -136,7 +141,7 @@ fun saveResult(
     terminating: Boolean = false,
     recentGap: Int = 0
 ): MutableList<TermData> {
-    var recalculateAll: Boolean = false
+    var recalculateAll = false
 
     //# if terminating, save results of all incorrect terms waiting to be repeated
     if (terminating) {
@@ -268,7 +273,22 @@ fun getTop(
     return Quad(recent, repeatIncorrectIds, futureTerms, data)
 }
 
-fun setButtonsEnabled(buttons: List<Button>, enabled: Boolean) {
-    buttons.forEach { it.isEnabled = enabled }
+fun loadTermDataFromCsv(file: File): List<TermData> {
+    file.bufferedReader().use { reader ->
+        return CsvToBeanBuilder<TermData>(reader)
+            .withType(TermData::class.java)
+            .withIgnoreLeadingWhiteSpace(true)
+            .build()
+            .parse()
+    }
+}
+
+fun saveTermDataToCsv(termDataList: List<TermData>, file: File) {
+    FileWriter(file).use { writer ->
+        val beanToCsv = StatefulBeanToCsvBuilder<TermData>(writer)
+            .withApplyQuotesToAll(false)
+            .build()
+        beanToCsv.write(termDataList)
+    }
 }
 

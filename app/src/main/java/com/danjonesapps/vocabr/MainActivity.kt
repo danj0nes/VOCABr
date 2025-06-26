@@ -11,7 +11,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Button
 import android.widget.Toast
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
 import java.io.FileOutputStream
@@ -22,8 +21,12 @@ import android.os.Environment
 import android.provider.MediaStore
 import java.io.OutputStream
 
+private const val LISTS_FILE_NAME = "lists.txt"
+
 class MainActivity : AppCompatActivity() {
-    private var fileName: String = "terms.csv" //need to add fileName saving functionality
+
+    private var fileName: String? = null
+
 
     // Launcher for file picker
     private val csvFilePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -48,22 +51,30 @@ class MainActivity : AppCompatActivity() {
         }
 
         val loadButton = findViewById<Button>(R.id.load_button)
-        val playButton = findViewById<Button>(R.id.play_button)
+        val learnButton = findViewById<Button>(R.id.learn_button)
         val exportButton = findViewById<Button>(R.id.export_button)
 
+        fileName = readListName()
+
         exportButton.setOnClickListener {
-            saveFileToDownloads(this.fileName)
+            fileName?.let {
+                saveFileToDownloads(it)
+            } ?: Toast.makeText(this, "Load file first.", Toast.LENGTH_SHORT).show()
         }
 
         loadButton.setOnClickListener {
             openCsvFilePicker()
         }
 
-        playButton.setOnClickListener {
-            val intent = Intent(this, LearnActivity::class.java)
-            intent.putExtra("fileName", this.fileName) // Pass variable
-            startActivity(intent) // Start LearnActivity
+        learnButton.setOnClickListener {
+            fileName?.let { name ->
+                val intent = Intent(this, LearnActivity::class.java).apply {
+                    putExtra("fileName", name)
+                }
+                startActivity(intent)
+            } ?: Toast.makeText(this, "Load file first.", Toast.LENGTH_SHORT).show()
         }
+
     }
 
     private fun openCsvFilePicker() {
@@ -78,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val fileName = getFileNameFromUri(uri) ?: "imported.csv"
             this.fileName = fileName
+            saveListName(fileName)
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
             val outputFile = File(filesDir, fileName)
 
@@ -152,6 +164,20 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun saveListName(content: String) {
+        val file = File(filesDir, LISTS_FILE_NAME)
+        file.writeText(content)
+    }
+
+    private fun readListName(): String? {
+        val file = File(filesDir, LISTS_FILE_NAME)
+        return if (file.exists()) {
+            file.readText()
+        } else {
+            null
         }
     }
 }
