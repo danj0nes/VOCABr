@@ -5,15 +5,94 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_gray"
     tools:context=".MainActivity">
 
+    <com.danjonesapps.vocabr.DiagonalBackgroundView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
     <TextView
+        android:id="@+id/text_logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:text="VOCABr"
+        android:textSize="55sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/cascadia_mono"
+        android:textColor="@color/term_white"
+        app:layout_constraintVertical_bias="0.2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Smaller Text Below and Slightly to the Right -->
+    <TextView
+        android:id="@+id/subText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="by dan jones"
+        android:textSize="18sp"
+        android:fontFamily="@font/cascadia_mono"
+        android:textColor="@color/term_white"
+        app:layout_constraintTop_toBottomOf="@id/text_logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBaseline_toBaselineOf="@id/text_logo"
+        android:translationY="24dp"
+        android:translationX="20dp" />
+
+    <Button
+        android:id="@+id/learn_button"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cascadia_mono"
+        android:textStyle="bold"
+        android:backgroundTint="@color/card_gray"
+        android:text="Learn"
+        android:textColor="@color/term_white"
+        android:textSize="25sp"
+        app:layout_constraintVertical_bias="0.52"
+        app:layout_constraintHorizontal_bias="0.75"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/load_button"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cascadia_mono"
+        android:textStyle="bold"
+        android:backgroundTint="@color/card_gray"
+        android:text="Load"
+        android:textColor="@color/term_white"
+        android:textSize="25sp"
+        app:layout_constraintVertical_bias="0.65"
+        app:layout_constraintHorizontal_bias="0.75"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/export_button"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cascadia_mono"
+        android:textStyle="bold"
+        android:backgroundTint="@color/card_gray"
+        android:text="Export"
+        android:textColor="@color/term_white"
+        android:textSize="25sp"
+        app:layout_constraintVertical_bias="0.78"
+        app:layout_constraintHorizontal_bias="0.75"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
