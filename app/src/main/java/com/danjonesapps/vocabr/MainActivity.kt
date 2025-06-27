@@ -99,11 +99,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            Toast.makeText(this, "CSV saved: ${outputFile.absolutePath}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "File Successfully Loaded.", Toast.LENGTH_LONG).show()
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Failed to save file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Failed to save file.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
     private fun saveFileToDownloads(fileName: String) {
         val inputFile = File(filesDir, fileName)
         if (!inputFile.exists()) {
-            Toast.makeText(this, "File not found: $fileName", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "File not found: $fileName.", Toast.LENGTH_SHORT).show()
         }
 
         try {
@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
 
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                 if (uri == null) {
-                    Toast.makeText(this, "Failed to create download file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Failed to create download file.", Toast.LENGTH_SHORT).show()
                     return
                 }
 
@@ -159,11 +159,11 @@ class MainActivity : AppCompatActivity() {
                 inputFile.copyTo(outputFile, overwrite = true)
             }
 
-            Toast.makeText(this, "File saved to Downloads", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "File saved to Downloads.", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error saving file: ${e.message}.", Toast.LENGTH_LONG).show()
         }
     }
 

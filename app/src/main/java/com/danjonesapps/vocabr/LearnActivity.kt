@@ -98,8 +98,7 @@ class LearnActivity : AppCompatActivity() {
         repeatIncorrectIds = quad.repeatIncorrectIds
 
         val topTerm: SelectedTerm = quad.selectedTerm ?: run {
-            saveFile()
-            terminate()
+            saveAndTerminate()
             return
         }
         selectedTerm = topTerm
@@ -173,8 +172,7 @@ class LearnActivity : AppCompatActivity() {
                     futureTerms.filter { it.second }.map { Pair(it.first, 0) }
                 )
 
-                saveFile()
-                terminate()
+                saveAndTerminate()
                 return
             }
         }
@@ -267,6 +265,17 @@ class LearnActivity : AppCompatActivity() {
         if (verbose) {
             Toast.makeText(this, "Saved Successfully.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun saveAndTerminate() {
+        df = saveResult(
+            df = df,
+            recent = recent,
+            repeatIncorrectIds = repeatIncorrectIds,
+            terminating = true
+        )
+        saveFile()
+        terminate()
     }
 
     private fun initViews() {
