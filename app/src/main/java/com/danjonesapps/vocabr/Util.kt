@@ -4,7 +4,8 @@ import com.opencsv.bean.CsvBindByName
 import com.opencsv.bean.CsvToBeanBuilder
 import com.opencsv.bean.StatefulBeanToCsvBuilder
 import java.io.File
-import java.io.FileWriter
+import java.io.OutputStreamWriter
+import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import com.opencsv.bean.CsvDate
@@ -254,7 +255,7 @@ fun getTop(
 
     // 3. Pick from filtered df
     if (data == null && !quitting) {
-        val avoidIds = recent.map { it.first }.toSet()
+        val avoidIds = (recent.map { it.first } + repeatIncorrectIds.map { it.first }).toSet()
         for (term in tempDf) {
             if (term.uniqueId !in avoidIds) {
                 data = termData(term.uniqueId, false)
@@ -274,7 +275,7 @@ fun getTop(
 }
 
 fun loadTermDataFromCsv(file: File): List<TermData> {
-    file.bufferedReader().use { reader ->
+    file.bufferedReader(Charsets.UTF_8).use { reader ->
         return CsvToBeanBuilder<TermData>(reader)
             .withType(TermData::class.java)
             .withIgnoreLeadingWhiteSpace(true)
@@ -284,11 +285,10 @@ fun loadTermDataFromCsv(file: File): List<TermData> {
 }
 
 fun saveTermDataToCsv(termDataList: List<TermData>, file: File) {
-    FileWriter(file).use { writer ->
+    OutputStreamWriter(FileOutputStream(file), Charsets.UTF_8).use { writer ->
         val beanToCsv = StatefulBeanToCsvBuilder<TermData>(writer)
             .withApplyQuotesToAll(false)
             .build()
         beanToCsv.write(termDataList)
     }
 }
-
