@@ -39,6 +39,7 @@ data class Quad<A, B, C, D>(val recent: A, val repeatIncorrectIds: B, val future
 data class SelectedTerm(
     val id: Int,
     val term: String,
+    val termType: String,
     val definition: String,
     val learntScore: Float,
     val repeatIncorrect: Boolean
@@ -225,6 +226,7 @@ fun getTop(
         return SelectedTerm(
             id = id,
             term = row.term,
+            termType = row.termType,
             definition = row.definition,
             learntScore = row.learntScore,
             repeatIncorrect = repeat

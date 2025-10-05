@@ -1,15 +1,25 @@
 package com.danjonesapps.vocabr
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.content.Context
 import android.content.Intent
+import android.os.Bundle
+import android.text.Editable
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.time.LocalDate
 
@@ -37,10 +47,14 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var showButton: Button
     private lateinit var incorrectButton: Button
     private lateinit var learntScoreTextView: TextView
+    private lateinit var termTypeTextView: TextView
     private lateinit var termTextView: TextView
     private lateinit var quittingTextView: TextView
     private lateinit var correctTextView: TextView
     private lateinit var incorrectTextView: TextView
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: TermAdapter
 
     //other vars and vals
     private var df: MutableList<TermData> = mutableListOf()
@@ -54,6 +68,7 @@ class LearnActivity : AppCompatActivity() {
     private var reversing: Boolean = false
     private var quitting: Boolean = false
     private var showingTerm: Boolean = false
+    private var resetFlip: Boolean = true
 
     private var waitingForCommand: Boolean = false
 
@@ -89,6 +104,13 @@ class LearnActivity : AppCompatActivity() {
         recentLength = minOf(updatedDF.size - 1, allowRepeatsAfter)
 
         showTerm()
+
+        // search bar
+        adapter = TermAdapter(emptyList())
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+
+        setupSearch()
     }
 
     private fun showTerm(){
@@ -109,15 +131,37 @@ class LearnActivity : AppCompatActivity() {
         val learntScorePercent = (topTerm.learntScore * 100).toInt()
         learntScoreTextView.text = getString(R.string.learnt_score, learntScorePercent)
 
-        // SET TERM
-        if (topTerm.repeatIncorrect) {
-            termTextView.setTextColor(getColor(R.color.quitting_yellow))
+        // SET TERM TYPE
+        termTypeTextView.text = topTerm.termType
+
+        // ENSURE TERM IS SHOWN IF NEW TERM
+        if (resetFlip) {
+            showingTerm = true
         }
         else {
-            termTextView.setTextColor(getColor(R.color.term_white))
+            resetFlip = true
         }
-        termTextView.text = topTerm.term
-        showingTerm = true
+
+        // SET TERM
+        if (showingTerm) {
+            if (topTerm.repeatIncorrect) {
+                termTextView.setTextColor(getColor(R.color.quitting_yellow))
+            }
+            else {
+                termTextView.setTextColor(getColor(R.color.term_white))
+            }
+            termTextView.text = topTerm.term
+        }
+        else {
+            if (topTerm.repeatIncorrect) {
+                termTextView.setTextColor(getColor(R.color.quitting_yellow_def))
+            }
+            else {
+                termTextView.setTextColor(getColor(R.color.term_white_def))
+            }
+            termTextView.text = topTerm.definition
+        }
+
 
         // SET QUITTING
         if (quitting) {
@@ -155,6 +199,7 @@ class LearnActivity : AppCompatActivity() {
                 // ensure than term on screen is chosen again
                 if (topTerm.repeatIncorrect) {
                     futureTerms.add(0, Pair(topTerm.id, true))
+                    resetFlip = false
                 }
 
                 recent.clear()
@@ -191,6 +236,7 @@ class LearnActivity : AppCompatActivity() {
             recent.clear()
             correct = 0
             incorrect = 0
+            resetFlip = false
         }
         else if (buttonCommand == ButtonCommand.BACK) {
             if (recent.isNotEmpty()) {
@@ -224,13 +270,25 @@ class LearnActivity : AppCompatActivity() {
             continueToNext()
         }
         else if (buttonCommand == ButtonCommand.SHOW) {
+            showingTerm = !showingTerm
             if (showingTerm) {
-                termTextView.text = topTerm.definition
-            }
-            else {
+                if (topTerm.repeatIncorrect) {
+                    termTextView.setTextColor(getColor(R.color.quitting_yellow))
+                }
+                else {
+                    termTextView.setTextColor(getColor(R.color.term_white))
+                }
                 termTextView.text = topTerm.term
             }
-            showingTerm = !showingTerm
+            else {
+                if (topTerm.repeatIncorrect) {
+                    termTextView.setTextColor(getColor(R.color.quitting_yellow_def))
+                }
+                else {
+                    termTextView.setTextColor(getColor(R.color.term_white_def))
+                }
+                termTextView.text = topTerm.definition
+            }
             waitingForCommand = true
             return
         }
@@ -278,6 +336,62 @@ class LearnActivity : AppCompatActivity() {
         terminate()
     }
 
+    private fun hideKeyboard(view: View) {
+        val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun setupSearch() {
+        val searchInput = findViewById<EditText>(R.id.search_input)
+        val clearIcon = findViewById<ImageView>(R.id.clear_icon)
+
+        // Text change listener
+        searchInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s.toString()
+                if (query.isEmpty()) {
+                    clearIcon.visibility = View.GONE
+                    adapter.updateList(emptyList())
+                    return
+                }
+                clearIcon.visibility = View.VISIBLE
+
+                val searchQuery = query.lowercase()
+
+                val filteredList = df.filter {
+                    it.definition.lowercase().contains(searchQuery) ||
+                            it.term.lowercase().contains(searchQuery)
+                }.sortedWith(compareByDescending {
+                    // Prioritize items where term or definition starts with the query
+                    it.definition.lowercase().startsWith(searchQuery) || it.term.lowercase().startsWith(searchQuery)
+                }).take(5)
+
+                adapter.updateList(filteredList, searchQuery)
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        // Clear icon click
+        clearIcon.setOnClickListener {
+            searchInput.text.clear()
+            searchInput.clearFocus()
+            hideKeyboard(searchInput)
+        }
+
+        // Handle Enter key to close keyboard
+        searchInput.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                actionId == EditorInfo.IME_ACTION_DONE ||
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            ) {
+                hideKeyboard(searchInput)
+                searchInput.clearFocus()
+                true
+            } else false
+        }
+    }
+
     private fun initViews() {
         //buttons
         quitButton = findViewById(R.id.button_quit)
@@ -295,9 +409,12 @@ class LearnActivity : AppCompatActivity() {
 
         //text views
         learntScoreTextView = findViewById(R.id.text_learnt_score)
+        termTypeTextView = findViewById(R.id.text_term_type)
         termTextView = findViewById(R.id.text_term)
         quittingTextView = findViewById(R.id.text_quitting)
         correctTextView = findViewById(R.id.text_correct)
         incorrectTextView = findViewById(R.id.text_incorrect)
+
+        recyclerView = findViewById(R.id.term_recycler_view)
     }
 }

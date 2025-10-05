@@ -8,7 +8,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.danjonesapps.vocabr"
+        applicationId = "com.danjonesapps.vocabr.test"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
