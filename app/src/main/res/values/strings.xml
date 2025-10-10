@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">VOCABr</string>
     <string name="learnt_score">Learnt Score: %d%%</string>
+    <string name="back_button_content_description">back button</string>
+    <string name="show_button_text">Show</string>
+    <string name="incorrect_button_text">X</string>
+    <string name="correct_button_text">✓</string>
+    <string name="save_button_text">Save</string>
+    <string name="quit_button_text">X</string>
+    <string name="term_type_default_text">term type</string>
+    <string name="learnt_score_default_text">learnt score: 0%</string>
+    <string name="term_text_default">je mange des pommes</string>
+    <string name="count_text_default">0</string>
+    <string name="quitting_text">quitting</string>
+    <string name="logo_sub_text">by dan jones</string>
+    <string name="learn_button_text">Learn</string>
+    <string name="load_button_text">Load</string>
+    <string name="export_button_text">Export</string>
 </resources>

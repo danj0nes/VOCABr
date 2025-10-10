@@ -14,12 +14,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.text.TextWatcher
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.time.LocalDate
 
@@ -53,8 +53,11 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var correctTextView: TextView
     private lateinit var incorrectTextView: TextView
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerView: CustomRecyclerView
     private lateinit var adapter: TermAdapter
+    private lateinit var searchInput: EditText
+    private lateinit var clearIcon: ImageView
+    private lateinit var dimOverlay: View
 
     //other vars and vals
     private var df: MutableList<TermData> = mutableListOf()
@@ -342,9 +345,6 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun setupSearch() {
-        val searchInput = findViewById<EditText>(R.id.search_input)
-        val clearIcon = findViewById<ImageView>(R.id.clear_icon)
-
         // Text change listener
         searchInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -355,6 +355,7 @@ class LearnActivity : AppCompatActivity() {
                     adapter.updateList(emptyList())
                     return
                 }
+
                 clearIcon.visibility = View.VISIBLE
 
                 val searchQuery = query.lowercase()
@@ -365,19 +366,12 @@ class LearnActivity : AppCompatActivity() {
                 }.sortedWith(compareByDescending {
                     // Prioritize items where term or definition starts with the query
                     it.definition.lowercase().startsWith(searchQuery) || it.term.lowercase().startsWith(searchQuery)
-                }).take(5)
+                }).take(20)
 
                 adapter.updateList(filteredList, searchQuery)
             }
             override fun afterTextChanged(s: Editable?) {}
         })
-
-        // Clear icon click
-        clearIcon.setOnClickListener {
-            searchInput.text.clear()
-            searchInput.clearFocus()
-            hideKeyboard(searchInput)
-        }
 
         // Handle Enter key to close keyboard
         searchInput.setOnEditorActionListener { _, actionId, event ->
@@ -390,6 +384,56 @@ class LearnActivity : AppCompatActivity() {
                 true
             } else false
         }
+
+        clearIcon.setOnClickListener {
+            closeSearch()
+        }
+        dimOverlay.setOnClickListener {
+            closeSearch()
+        }
+
+        // When user clicks or focuses the search bar
+        searchInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                dimOverlay.fadeIn(200)
+                recyclerView.visibility = View.VISIBLE
+            }
+        }
+
+        recyclerView.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val child = recyclerView.findChildViewUnder(event.x, event.y)
+                if (child == null) {
+                    closeSearch()
+                    v.performClick()
+                    return@setOnTouchListener true
+                }
+            }
+            false
+        }
+    }
+
+    private fun closeSearch() {
+        searchInput.text.clear()
+        searchInput.clearFocus()
+        dimOverlay.fadeOut(200)
+        recyclerView.visibility = View.GONE
+        hideKeyboard(searchInput)
+    }
+
+    // Simple fade animation helpers
+    private fun View.fadeIn(duration: Long = 200) {
+        animate().alpha(1f).setDuration(duration)
+            .withStartAction {
+                visibility = View.VISIBLE
+                alpha = 0f
+            }.start()
+    }
+
+    private fun View.fadeOut(duration: Long = 200) {
+        animate().alpha(0f).setDuration(duration)
+            .withEndAction { visibility = View.GONE }
+            .start()
     }
 
     private fun initViews() {
@@ -415,6 +459,10 @@ class LearnActivity : AppCompatActivity() {
         correctTextView = findViewById(R.id.text_correct)
         incorrectTextView = findViewById(R.id.text_incorrect)
 
+        //others
+        searchInput = findViewById(R.id.search_input)
+        clearIcon = findViewById(R.id.clear_icon)
+        dimOverlay = findViewById(R.id.dim_overlay)
         recyclerView = findViewById(R.id.term_recycler_view)
     }
 }
