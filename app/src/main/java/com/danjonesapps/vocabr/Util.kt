@@ -45,6 +45,13 @@ data class SelectedTerm(
     val repeatIncorrect: Boolean
 )
 
+data class TermList(
+    val fileName: String,
+    val numTerms: Int,
+    val avgLearntScore: Float,
+    val dateLastTested: LocalDate
+)
+
 enum class ButtonCommand {
     QUIT,
     SAVE,

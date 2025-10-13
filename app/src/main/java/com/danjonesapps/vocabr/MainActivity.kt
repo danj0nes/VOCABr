@@ -1,36 +1,35 @@
 package com.danjonesapps.vocabr
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import android.content.ContentValues
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import java.io.OutputStream
+import java.time.LocalDate
+
 
 private const val LISTS_FILE_NAME = "lists.txt"
 
 class MainActivity : AppCompatActivity() {
-
-    private var fileName: String? = null
-
+    private var listsData: MutableList<TermList> = mutableListOf()
 
     // Launcher for file picker
     private val csvFilePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+        if (result.resultCode == RESULT_OK && result.data != null) {
             val uri: Uri? = result.data?.data
             uri?.let {
                 saveCsvToInternalStorage(it)
@@ -51,45 +50,63 @@ class MainActivity : AppCompatActivity() {
         }
 
         val loadButton = findViewById<Button>(R.id.load_button)
-        val learnButton = findViewById<Button>(R.id.learn_button)
+        val deleteButton = findViewById<Button>(R.id.delete_button)
         val exportButton = findViewById<Button>(R.id.export_button)
+        val learnButton = findViewById<Button>(R.id.learn_button)
 
-        fileName = readListName()
+        listsData.addAll(readListNames().map { readList(it) })
 
-        exportButton.setOnClickListener {
-            fileName?.let {
-                saveFileToDownloads(it)
-            } ?: Toast.makeText(this, "Load file first.", Toast.LENGTH_SHORT).show()
-        }
+        updateRecyclerView(listsData)
 
         loadButton.setOnClickListener {
-            openCsvFilePicker()
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "text/*"
+            }
+            csvFilePicker.launch(intent)
+        }
+
+        deleteButton.setOnClickListener {
+            if (listsData.isNotEmpty()) {
+                listsData.removeAt(0)
+                writeFileNamesToListsFile()
+                updateRecyclerView(listsData)
+            }
+            else {
+                Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        exportButton.setOnClickListener {
+            if (listsData.isNotEmpty()) {
+                saveFileToDownloads(fileName = listsData[0].fileName)
+            }
+            else {
+                Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         learnButton.setOnClickListener {
-            fileName?.let { name ->
+            if (listsData.isNotEmpty()) {
                 val intent = Intent(this, LearnActivity::class.java).apply {
-                    putExtra("fileName", name)
+                    putExtra("fileName", listsData[0].fileName)
                 }
                 startActivity(intent)
-            } ?: Toast.makeText(this, "Load file first.", Toast.LENGTH_SHORT).show()
+            }
+            else {
+                Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
+            }
         }
-
-    }
-
-    private fun openCsvFilePicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "text/*"
-        }
-        csvFilePicker.launch(intent)
     }
 
     private fun saveCsvToInternalStorage(uri: Uri) {
         try {
             val fileName = getFileNameFromUri(uri) ?: "imported.csv"
-            this.fileName = fileName
-            saveListName(fileName)
+
+            listsData.add(0, readList(fileName))
+            writeFileNamesToListsFile()
+            updateRecyclerView(listsData)
+
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
             val outputFile = File(filesDir, fileName)
 
@@ -167,17 +184,46 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveListName(content: String) {
-        val file = File(filesDir, LISTS_FILE_NAME)
-        file.writeText(content)
+    private fun updateRecyclerView(listsData: MutableList<TermList>) {
+
     }
 
-    private fun readListName(): String? {
+    private fun readList(fileName: String): TermList {
+
+        // read list and aggregate
+
+        return TermList(fileName, 0, 0f, LocalDate.now())
+    }
+
+    private fun readListNames(): List<String> {
         val file = File(filesDir, LISTS_FILE_NAME)
-        return if (file.exists()) {
-            file.readText()
-        } else {
-            null
+
+        // If the file doesn't exist, return an empty list
+        if (!file.exists()) {
+            return emptyList()
+        }
+
+        // Read all lines safely
+        return try {
+            file.readLines()
+                .map { it.trim() }        // remove any extra spaces
+                .filter { it.isNotEmpty() } // ignore blank lines
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
+
+    fun writeFileNamesToListsFile() {
+        val file = File(filesDir, LISTS_FILE_NAME)
+
+        try {
+            file.writeText(
+                listsData.joinToString(separator = "\n") { it.fileName }
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 }
