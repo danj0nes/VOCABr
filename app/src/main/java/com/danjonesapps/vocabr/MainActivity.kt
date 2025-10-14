@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -26,6 +28,8 @@ private const val LISTS_FILE_NAME = "lists.txt"
 
 class MainActivity : AppCompatActivity() {
     private var listsData: MutableList<TermList> = mutableListOf()
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: ListAdapter
 
     // Launcher for file picker
     private val csvFilePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -49,6 +53,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+
         val loadButton = findViewById<Button>(R.id.load_button)
         val deleteButton = findViewById<Button>(R.id.delete_button)
         val exportButton = findViewById<Button>(R.id.export_button)
@@ -56,7 +61,12 @@ class MainActivity : AppCompatActivity() {
 
         listsData.addAll(readListNames().map { readList(it) })
 
-        updateRecyclerView(listsData)
+        adapter = ListAdapter(this, listsData) { updatedList ->
+            listsData = updatedList
+        }
+        recyclerView = findViewById(R.id.list_recycler)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
 
         loadButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -68,9 +78,10 @@ class MainActivity : AppCompatActivity() {
 
         deleteButton.setOnClickListener {
             if (listsData.isNotEmpty()) {
+                saveFileToDownloads(fileName = listsData[0].fileName)
                 listsData.removeAt(0)
                 writeFileNamesToListsFile()
-                updateRecyclerView(listsData)
+                adapter.updateRecyclerView(true)
             }
             else {
                 Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
@@ -105,7 +116,7 @@ class MainActivity : AppCompatActivity() {
 
             listsData.add(0, readList(fileName))
             writeFileNamesToListsFile()
-            updateRecyclerView(listsData)
+            adapter.updateRecyclerView(false)
 
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
             val outputFile = File(filesDir, fileName)
@@ -182,10 +193,6 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
             Toast.makeText(this, "Error saving file: ${e.message}.", Toast.LENGTH_LONG).show()
         }
-    }
-
-    private fun updateRecyclerView(listsData: MutableList<TermList>) {
-
     }
 
     private fun readList(fileName: String): TermList {

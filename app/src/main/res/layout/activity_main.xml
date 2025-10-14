@@ -21,7 +21,7 @@
         android:textStyle="bold"
         android:fontFamily="@font/cascadia_mono"
         android:textColor="@color/term_white"
-        app:layout_constraintVertical_bias="0.05"
+        app:layout_constraintVertical_bias="0.02"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -47,11 +47,11 @@
         android:layout_height="0dp"
         android:layout_width="0dp"
         app:cardCornerRadius="16dp"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         app:cardElevation="0dp"
         android:backgroundTint="@color/button_gray"
-        app:layout_constraintWidth_percent="0.86"
-        app:layout_constraintHeight_percent="0.58"
+        app:layout_constraintWidth_percent="0.91"
+        app:layout_constraintHeight_percent="0.68"
         app:layout_constraintTop_toBottomOf="@id/text_logo"
         app:layout_constraintBottom_toTopOf="@id/learn_button"
         app:layout_constraintStart_toStartOf="parent"
@@ -64,30 +64,33 @@
             android:gravity="center">
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/text_term"
+                android:id="@+id/list_recycler"
                 android:layout_height="0dp"
                 android:layout_width="0dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp"
+                android:paddingTop="4dp"
                 android:background="#252729"
+                android:clickable="true"
+                android:focusable="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/terms_title"
                 app:layout_constraintBottom_toTopOf="@id/delete_button"
-                app:layout_constraintWidth_percent="0.9"/>
+                app:layout_constraintWidth_percent="0.92"/>
 
             <TextView
                 android:id="@+id/terms_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/cascadia_mono"
-                android:text="Your VOCAB"
+                android:text="VOCAB Lists"
                 android:textColor="@color/learn_score_blue"
                 android:textSize="22sp"
                 android:gravity="top"
-                android:layout_marginTop="10dp"
-                app:layout_constraintVertical_bias="0"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="5dp"
+                app:layout_constraintBottom_toTopOf="@id/list_recycler"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -103,11 +106,12 @@
                 android:text="@string/load_button_text"
                 android:textColor="@color/term_white"
                 android:textSize="20sp"
-                android:layout_marginStart="5dp"
-                app:layout_constraintVertical_bias="0.97"
+                android:layout_marginBottom="6dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="4dp"
                 app:layout_constraintEnd_toStartOf="@id/delete_button"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/list_recycler"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <Button
@@ -117,15 +121,16 @@
                 android:fontFamily="@font/cascadia_mono"
                 android:textStyle="bold"
                 android:padding="0dp"
+                android:layout_marginBottom="6dp"
+                android:layout_marginTop="6dp"
                 android:backgroundTint="@color/card_gray"
                 android:text="Delete"
                 android:textColor="@color/term_white"
                 android:textSize="20sp"
-                app:layout_constraintVertical_bias="0.97"
                 app:layout_constraintEnd_toStartOf="@id/export_button"
-                app:layout_constraintStart_toEndOf="@id/load_button"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintStart_toEndOf="@id/load_button"
+                app:layout_constraintTop_toBottomOf="@id/list_recycler" />
 
             <Button
                 android:id="@+id/export_button"
@@ -136,14 +141,13 @@
                 android:backgroundTint="@color/card_gray"
                 android:padding="0dp"
                 android:text="@string/export_button_text"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="4dp"
                 android:textColor="@color/term_white"
                 android:textSize="20sp"
-                app:layout_constraintVertical_bias="0.97"
                 app:layout_constraintStart_toEndOf="@id/delete_button"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toBottomOf="@id/list_recycler"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
@@ -154,12 +158,12 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/cascadia_mono"
         android:textStyle="bold"
-        android:backgroundTint="#1B6999"
+        android:backgroundTint="@color/term_white_def_high"
         android:text="@string/learn_button_text"
         android:textColor="@color/term_white"
         android:textSize="25sp"
-        app:layout_constraintVertical_bias="0.94"
         app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintVertical_bias="0.958"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
