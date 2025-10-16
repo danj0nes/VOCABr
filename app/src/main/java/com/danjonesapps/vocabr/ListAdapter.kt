@@ -13,8 +13,8 @@ import java.time.format.DateTimeFormatter
 
 class ListAdapter(
     private val context: Context,
-    private var items: MutableList<TermList>,
-    private val onListUpdated: (MutableList<TermList>) -> Unit
+    private var items: MutableList<SavedListData>,
+    private val onListUpdated: (MutableList<SavedListData>) -> Unit
 ) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -36,12 +36,12 @@ class ListAdapter(
         val item = items[position]
 
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
+        val listStringData = item.toDisplayStrings()
         with(holder) {
-            listName.text = item.fileName
-            avgLearntScore.text = String.format("learnt score: %.0f%%", item.avgLearntScore)
-            numTerms.text = "terms: ${item.numTerms}"
-            dateLastTested.text = "last tested: ${item.dateLastTested.format(formatter)}"
+            listName.text = listStringData["fileName"]
+            avgLearntScore.text = listStringData["score"]
+            numTerms.text = listStringData["terms"]
+            dateLastTested.text = listStringData["lastTested"]
         }
 
         // Highlight selected item
@@ -50,13 +50,13 @@ class ListAdapter(
                 holder.container,
                 ContextCompat.getColorStateList(context, R.color.term_white_def_high)
             )
-            holder.avgLearntScore.setTextColor(ContextCompat.getColorStateList(context, R.color.term_white))
+            //holder.avgLearntScore.setTextColor(ContextCompat.getColorStateList(context, R.color.term_white))
         } else {
             ViewCompat.setBackgroundTintList(
                 holder.container,
                 ContextCompat.getColorStateList(context, R.color.button_gray)
             )
-            holder.avgLearntScore.setTextColor(ContextCompat.getColorStateList(context, R.color.learn_score_blue))
+            //holder.avgLearntScore.setTextColor(ContextCompat.getColorStateList(context, R.color.learn_score_blue))
         }
 
         holder.itemView.setOnClickListener {
@@ -80,6 +80,8 @@ class ListAdapter(
                 val recyclerView = activity.findViewById<RecyclerView>(R.id.list_recycler) // replace with your RecyclerView ID
                 recyclerView.scrollToPosition(0)
             }
+
+            writeListDataToListsFile(context, items)
         }
     }
 
@@ -97,5 +99,7 @@ class ListAdapter(
             val recyclerView = activity.findViewById<RecyclerView>(R.id.list_recycler) // replace with your RecyclerView ID
             recyclerView.scrollToPosition(0)
         }
+
+        writeListDataToListsFile(context, items)
     }
 }

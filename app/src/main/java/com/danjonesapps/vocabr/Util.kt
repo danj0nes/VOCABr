@@ -1,5 +1,6 @@
 package com.danjonesapps.vocabr
 
+import android.content.Context
 import com.opencsv.bean.CsvBindByName
 import com.opencsv.bean.CsvToBeanBuilder
 import com.opencsv.bean.StatefulBeanToCsvBuilder
@@ -11,6 +12,9 @@ import java.time.temporal.ChronoUnit
 import com.opencsv.bean.CsvDate
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class TermData(
     @CsvBindByName(column = "UNIQUE_ID")
@@ -45,12 +49,88 @@ data class SelectedTerm(
     val repeatIncorrect: Boolean
 )
 
-data class TermList(
+data class SavedListData(
     val fileName: String,
-    val numTerms: Int,
-    val avgLearntScore: Float,
-    val dateLastTested: LocalDate
-)
+    val numTerms: Int?,
+    val avgLearntScore: Float?,
+    val dateLastTested: LocalDate?
+) {
+    // Unified constructor: handles both a delimited string OR just a file name
+    constructor(serialized: String, delimiter: String = "|") : this(
+        fileName = parseParts(serialized, delimiter).fileName,
+        numTerms = parseParts(serialized, delimiter).numTerms,
+        avgLearntScore = parseParts(serialized, delimiter).avgLearntScore,
+        dateLastTested = parseParts(serialized, delimiter).dateLastTested
+    )
+
+    companion object {
+        private fun parseParts(serialized: String, delimiter: String): SavedListData {
+            val parts = serialized
+                .split(delimiter)
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+
+            return when (parts.size) {
+                0 -> SavedListData("", null, null, null)
+                1 -> SavedListData(parts[0], null, null, null)
+                else -> {
+                    val fileName = parts[0]
+                    val numTerms = parts.getOrNull(1)?.toIntOrNull()
+                    val avgScore = parts.getOrNull(2)?.toFloatOrNull()
+                    val date = parts.getOrNull(3)?.let {
+                        runCatching { LocalDate.parse(it) }.getOrNull()
+                    }
+                    SavedListData(fileName, numTerms, avgScore, date)
+                }
+            }
+        }
+    }
+
+    fun toDelimitedString(delimiter: String = "|"): String {
+        val values = listOf(
+            fileName,
+            numTerms?.toString(),
+            avgLearntScore?.toString(),
+            dateLastTested?.toString()
+        )
+        return values
+            .dropLastWhile { it.isNullOrEmpty() }
+            .joinToString(delimiter)
+    }
+
+    // Method to return the delimited string version (omits trailing null/empty values)
+    fun toDisplayStrings(): Map<String, String> {
+        val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
+        val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+        val termsText = if (numTerms != null) {
+            "terms: ${numberFormat.format(numTerms)}"
+        } else {
+            "terms:"
+        }
+
+        val scoreText = if (avgLearntScore != null) {
+            "learnt score: ${String.format("%.1f%%", avgLearntScore * 100f)}"
+        } else {
+            "learnt score:"
+        }
+
+        val dateText = if (dateLastTested != null) {
+            "last tested: ${dateLastTested.format(dateFormat)}"
+        } else {
+            "last tested:"
+        }
+
+        return mapOf(
+            "fileName" to fileName,
+            "terms" to termsText,
+            "score" to scoreText,
+            "lastTested" to dateText
+        )
+    }
+}
+
+
 
 enum class ButtonCommand {
     QUIT,
@@ -59,6 +139,47 @@ enum class ButtonCommand {
     NOT,
     SHOW,
     GOT
+}
+
+private const val LISTS_FILE_NAME = "lists.txt"
+
+fun writeListDataToListsFile(context: Context, listsData: MutableList<SavedListData>) {
+    val file = File(context.filesDir, LISTS_FILE_NAME)
+
+    try {
+        // Convert each TermList into its delimited string representation
+        val content = listsData.joinToString(separator = "\n") { it.toDelimitedString() }
+        file.writeText(content)
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+fun readListData(context: Context): MutableList<SavedListData> {
+    val file = File(context.filesDir, LISTS_FILE_NAME)
+
+    // If the file doesn't exist, return an empty list
+    if (!file.exists()) {
+        return mutableListOf()
+    }
+
+    return try {
+        file.readLines()
+            .mapNotNull { line ->
+                val trimmed = line.trim()
+                if (trimmed.isEmpty()) return@mapNotNull null
+                try {
+                    SavedListData(trimmed) // uses your unified constructor
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null // skip invalid lines
+                }
+            }
+            .toMutableList()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        mutableListOf()
+    }
 }
 
 fun calcLearntScore(df: MutableList<TermData>, uniqueIds: List<Int>?= null): MutableList<TermData> {

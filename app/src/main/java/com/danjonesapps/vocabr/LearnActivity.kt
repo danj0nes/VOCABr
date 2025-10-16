@@ -1,6 +1,5 @@
 package com.danjonesapps.vocabr
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -13,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
@@ -76,6 +76,8 @@ class LearnActivity : AppCompatActivity() {
     private var waitingForCommand: Boolean = false
 
     private var file: File? = null
+    private lateinit var fileName: String
+    private lateinit var listsData: MutableList<SavedListData>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // android studio defaults
@@ -91,10 +93,12 @@ class LearnActivity : AppCompatActivity() {
 
         initViews()
 
-        val fileName = intent.getStringExtra("fileName") ?: run {
+        fileName = intent.getStringExtra("fileName") ?: run {
             terminate()
             return
         }
+
+        listsData = readListData(this)
 
         val file = File(filesDir, fileName)
         this.file = file
@@ -105,6 +109,8 @@ class LearnActivity : AppCompatActivity() {
         val updatedDF = calcLearntScore(terms)
         df = updatedDF
         recentLength = minOf(updatedDF.size - 1, allowRepeatsAfter)
+
+        saveListData()
 
         showTerm()
 
@@ -131,8 +137,7 @@ class LearnActivity : AppCompatActivity() {
         reversing = false
 
         // SET LEARNT SCORE
-        val learntScorePercent = (topTerm.learntScore * 100).toInt()
-        learntScoreTextView.text = getString(R.string.learnt_score, learntScorePercent)
+        learntScoreTextView.text = "learnt score: ${String.format("%.1f%%", topTerm.learntScore * 100f)}"
 
         // SET TERM TYPE
         termTypeTextView.text = topTerm.termType
@@ -322,6 +327,8 @@ class LearnActivity : AppCompatActivity() {
             return
         }
         saveTermDataToCsv(df, tempFile)
+        saveListData()
+
 
         if (verbose) {
             Toast.makeText(this, "Saved Successfully.", Toast.LENGTH_SHORT).show()
@@ -340,7 +347,7 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun hideKeyboard(view: View) {
-        val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = view.context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
@@ -434,6 +441,31 @@ class LearnActivity : AppCompatActivity() {
         animate().alpha(0f).setDuration(duration)
             .withEndAction { visibility = View.GONE }
             .start()
+    }
+
+    private fun saveListData() {
+        // 1. Calculate average learnt score
+        val avgLearntScore = if (df.isNotEmpty()) {
+            df.map { it.learntScore }.average().toFloat()
+        } else 0f
+
+        // 3. Create a new SavedListData object
+        val newSavedData = SavedListData(
+            fileName = fileName,
+            numTerms= df.size,
+            avgLearntScore = avgLearntScore,
+            dateLastTested = todayDate  // today's date
+        )
+
+        // 4. Replace the first item or add if empty
+        if (listsData.isNotEmpty()) {
+            listsData[0] = newSavedData
+        } else {
+            listsData.add(newSavedData)
+        }
+
+        // 5. Write the updated list back to file
+        writeListDataToListsFile(this, listsData)
     }
 
     private fun initViews() {

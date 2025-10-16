@@ -21,13 +21,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.time.LocalDate
 
 
-private const val LISTS_FILE_NAME = "lists.txt"
 
 class MainActivity : AppCompatActivity() {
-    private var listsData: MutableList<TermList> = mutableListOf()
+    private var listsData: MutableList<SavedListData> = mutableListOf()
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ListAdapter
 
@@ -53,13 +51,12 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-
         val loadButton = findViewById<Button>(R.id.load_button)
         val deleteButton = findViewById<Button>(R.id.delete_button)
         val exportButton = findViewById<Button>(R.id.export_button)
         val learnButton = findViewById<Button>(R.id.learn_button)
 
-        listsData.addAll(readListNames().map { readList(it) })
+        listsData.addAll(readListData(this))
 
         adapter = ListAdapter(this, listsData) { updatedList ->
             listsData = updatedList
@@ -80,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             if (listsData.isNotEmpty()) {
                 saveFileToDownloads(fileName = listsData[0].fileName)
                 listsData.removeAt(0)
-                writeFileNamesToListsFile()
+                writeListDataToListsFile(this, listsData)
                 adapter.updateRecyclerView(true)
             }
             else {
@@ -114,8 +111,8 @@ class MainActivity : AppCompatActivity() {
         try {
             val fileName = getFileNameFromUri(uri) ?: "imported.csv"
 
-            listsData.add(0, readList(fileName))
-            writeFileNamesToListsFile()
+            listsData.add(0, SavedListData(fileName))
+            writeListDataToListsFile(this, listsData)
             adapter.updateRecyclerView(false)
 
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
@@ -194,43 +191,4 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Error saving file: ${e.message}.", Toast.LENGTH_LONG).show()
         }
     }
-
-    private fun readList(fileName: String): TermList {
-
-        // read list and aggregate
-
-        return TermList(fileName, 0, 0f, LocalDate.now())
-    }
-
-    private fun readListNames(): List<String> {
-        val file = File(filesDir, LISTS_FILE_NAME)
-
-        // If the file doesn't exist, return an empty list
-        if (!file.exists()) {
-            return emptyList()
-        }
-
-        // Read all lines safely
-        return try {
-            file.readLines()
-                .map { it.trim() }        // remove any extra spaces
-                .filter { it.isNotEmpty() } // ignore blank lines
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-    }
-
-    fun writeFileNamesToListsFile() {
-        val file = File(filesDir, LISTS_FILE_NAME)
-
-        try {
-            file.writeText(
-                listsData.joinToString(separator = "\n") { it.fileName }
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
 }
