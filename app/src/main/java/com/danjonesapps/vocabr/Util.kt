@@ -51,19 +51,13 @@ data class SelectedTerm(
 
 data class SavedListData(
     val fileName: String,
-    val numTerms: Int?,
-    val avgLearntScore: Float?,
-    val dateLastTested: LocalDate?
+    val numTerms: Int? = null,
+    val avgLearntScore: Float? = null,
+    val dateLastTested: LocalDate? = null
 ) {
-    // Unified constructor: handles both a delimited string OR just a file name
-    constructor(serialized: String, delimiter: String = "|") : this(
-        fileName = parseParts(serialized, delimiter).fileName,
-        numTerms = parseParts(serialized, delimiter).numTerms,
-        avgLearntScore = parseParts(serialized, delimiter).avgLearntScore,
-        dateLastTested = parseParts(serialized, delimiter).dateLastTested
-    )
-
     companion object {
+        private const val DEFAULT_DELIMITER = "|"
+        private val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         private fun parseParts(serialized: String, delimiter: String): SavedListData {
             val parts = serialized
                 .split(delimiter)
@@ -71,8 +65,8 @@ data class SavedListData(
                 .filter { it.isNotEmpty() }
 
             return when (parts.size) {
-                0 -> SavedListData("", null, null, null)
-                1 -> SavedListData(parts[0], null, null, null)
+                0 -> SavedListData("") // should never happen (raise?)
+                1 -> SavedListData(parts[0])
                 else -> {
                     val fileName = parts[0]
                     val numTerms = parts.getOrNull(1)?.toIntOrNull()
@@ -84,42 +78,30 @@ data class SavedListData(
                 }
             }
         }
+
+        fun fromSerialized(serialized: String, delimiter: String = DEFAULT_DELIMITER): SavedListData {
+            val parts = parseParts(serialized, delimiter)
+            return SavedListData(parts.fileName, parts.numTerms, parts.avgLearntScore, parts.dateLastTested)
+        }
     }
 
-    fun toDelimitedString(delimiter: String = "|"): String {
-        val values = listOf(
+    fun toDelimitedString(delimiter: String = DEFAULT_DELIMITER): String {
+        return listOf(
             fileName,
             numTerms?.toString(),
             avgLearntScore?.toString(),
             dateLastTested?.toString()
-        )
-        return values
-            .dropLastWhile { it.isNullOrEmpty() }
+        ).dropLastWhile { it.isNullOrEmpty() }
             .joinToString(delimiter)
     }
 
     // Method to return the delimited string version (omits trailing null/empty values)
     fun toDisplayStrings(): Map<String, String> {
         val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
-        val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-        val termsText = if (numTerms != null) {
-            "terms: ${numberFormat.format(numTerms)}"
-        } else {
-            "terms:"
-        }
-
-        val scoreText = if (avgLearntScore != null) {
-            "learnt score: ${String.format("%.1f%%", avgLearntScore * 100f)}"
-        } else {
-            "learnt score:"
-        }
-
-        val dateText = if (dateLastTested != null) {
-            "last tested: ${dateLastTested.format(dateFormat)}"
-        } else {
-            "last tested:"
-        }
+        val termsText = numTerms?.let { "terms: ${numberFormat.format(it)}" } ?: "terms:"
+        val scoreText = avgLearntScore?.let { "learnt score: %.1f%%".format(it * 100f) } ?: "learnt score:"
+        val dateText = dateLastTested?.format(dateFormat).orEmpty()
 
         return mapOf(
             "fileName" to fileName,
@@ -129,7 +111,6 @@ data class SavedListData(
         )
     }
 }
-
 
 
 enum class ButtonCommand {
@@ -169,7 +150,7 @@ fun readListData(context: Context): MutableList<SavedListData> {
                 val trimmed = line.trim()
                 if (trimmed.isEmpty()) return@mapNotNull null
                 try {
-                    SavedListData(trimmed) // uses your unified constructor
+                    SavedListData.fromSerialized(trimmed)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     null // skip invalid lines

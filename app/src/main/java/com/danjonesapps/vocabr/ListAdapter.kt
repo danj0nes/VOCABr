@@ -4,16 +4,16 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
-import java.time.format.DateTimeFormatter
 
 class ListAdapter(
     private val context: Context,
-    private var items: MutableList<SavedListData>,
+    private var listsData: MutableList<SavedListData>,
     private val onListUpdated: (MutableList<SavedListData>) -> Unit
 ) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
 
@@ -22,6 +22,7 @@ class ListAdapter(
         val avgLearntScore: TextView = itemView.findViewById(R.id.avgLearntScore)
         val numTerms: TextView = itemView.findViewById(R.id.numTerms)
         val dateLastTested: TextView = itemView.findViewById(R.id.dateLastTested)
+        val radioImageView: ImageView = itemView.findViewById(R.id.radio_button)
         val container: ConstraintLayout = itemView.findViewById(R.id.item_container)
     }
 
@@ -30,50 +31,51 @@ class ListAdapter(
         return ViewHolder(view)
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount() = listsData.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = items[position]
+        val listStringData = listsData[position].toDisplayStrings()
 
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val listStringData = item.toDisplayStrings()
         with(holder) {
             listName.text = listStringData["fileName"]
             avgLearntScore.text = listStringData["score"]
             numTerms.text = listStringData["terms"]
             dateLastTested.text = listStringData["lastTested"]
-        }
 
-        // Highlight selected item
-        if (position == 0) {
-            ViewCompat.setBackgroundTintList(
-                holder.container,
-                ContextCompat.getColorStateList(context, R.color.term_white_def_high)
-            )
-            //holder.avgLearntScore.setTextColor(ContextCompat.getColorStateList(context, R.color.term_white))
-        } else {
-            ViewCompat.setBackgroundTintList(
-                holder.container,
-                ContextCompat.getColorStateList(context, R.color.button_gray)
-            )
-            //holder.avgLearntScore.setTextColor(ContextCompat.getColorStateList(context, R.color.learn_score_blue))
-        }
+            // Highlight selected item
+            if (position == 0) {
+                ViewCompat.setBackgroundTintList(
+                    container,
+                    ContextCompat.getColorStateList(context, R.color.term_white_def_high)
+                )
 
-        holder.itemView.setOnClickListener {
-            moveItemToTop(position)
+                // Change image to "checked" icon
+                radioImageView.setImageResource(R.drawable.radio_checked)
+            } else {
+                ViewCompat.setBackgroundTintList(
+                    container,
+                    ContextCompat.getColorStateList(context, R.color.button_gray)
+                )
+
+                // Change image to "unchecked" icon
+                radioImageView.setImageResource(R.drawable.radio_unchecked)
+            }
+
+            itemView.setOnClickListener {
+                moveItemToTop(position)
+            }
         }
     }
 
     private fun moveItemToTop(position: Int) {
         if (position != 0) {
-            val clickedItem = items.removeAt(position)
-            items.add(0, clickedItem)
+            val clickedItem = listsData.removeAt(position)
+            listsData.add(0, clickedItem)
             notifyItemMoved(position, 0)
-            // Refresh the backgrounds of the moved item and old top
-            for (i in 0 until position + 1) {
-                notifyItemChanged(i)
-            }
-            onListUpdated(items)
+            notifyItemRangeChanged(0, position + 1)
+
+            // Update listsData in MainActivity.kt
+            onListUpdated(listsData)
 
             // Scroll to top
             (context as? androidx.appcompat.app.AppCompatActivity)?.let { activity ->
@@ -81,7 +83,7 @@ class ListAdapter(
                 recyclerView.scrollToPosition(0)
             }
 
-            writeListDataToListsFile(context, items)
+            writeListDataToListsFile(context, listsData)
         }
     }
 
@@ -92,7 +94,7 @@ class ListAdapter(
         else {
             notifyItemInserted(0)
         }
-        notifyItemRangeChanged(0, items.size)
+        notifyItemRangeChanged(0, listsData.size)
 
         // Scroll to top
         (context as? androidx.appcompat.app.AppCompatActivity)?.let { activity ->
@@ -100,6 +102,6 @@ class ListAdapter(
             recyclerView.scrollToPosition(0)
         }
 
-        writeListDataToListsFile(context, items)
+        writeListDataToListsFile(context, listsData)
     }
 }

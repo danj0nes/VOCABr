@@ -17,6 +17,8 @@
         android:id="@+id/logo_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@id/lists_card_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -61,9 +63,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-
-
     <androidx.cardview.widget.CardView
         android:id="@+id/lists_card_view"
         android:layout_height="0dp"
@@ -72,7 +71,6 @@
         app:cardElevation="0dp"
         android:backgroundTint="@color/card_gray"
         app:layout_constraintWidth_percent="0.91"
-        app:layout_constraintHeight_percent="0.68"
         app:layout_constraintTop_toBottomOf="@id/logo_group"
         app:layout_constraintBottom_toTopOf="@id/learn_button"
         app:layout_constraintStart_toStartOf="parent"
@@ -166,6 +164,8 @@
         android:backgroundTint="@color/term_white_def_high"
         android:text="@string/learn_button_text"
         android:textColor="@color/term_white"
+        android:layout_marginTop="22dp"
+        android:layout_marginBottom="22dp"
         android:textSize="25sp"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintBottom_toBottomOf="parent"
