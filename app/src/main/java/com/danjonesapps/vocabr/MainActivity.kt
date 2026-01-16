@@ -1,5 +1,6 @@
 package com.danjonesapps.vocabr
 
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
@@ -23,8 +24,16 @@ import java.io.InputStream
 import java.io.OutputStream
 
 
-
 class MainActivity : AppCompatActivity() {
+    private var currentDaysSince: Float = 1f
+    private var currentCorrect: Float = 1f
+    private var currentTested: Float = 1f
+    private var isTopNSelected: Boolean = false
+    private var currentTopN: Int = 26
+    companion object {
+        const val SETTINGS_REQUEST_CODE = 1001
+        const val SETTINGS_FILE = "settings.txt"
+    }
     private var listsData: MutableList<SavedListData> = mutableListOf()
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ListAdapter
@@ -55,6 +64,9 @@ class MainActivity : AppCompatActivity() {
         val deleteButton = findViewById<Button>(R.id.delete_button)
         val exportButton = findViewById<Button>(R.id.export_button)
         val learnButton = findViewById<Button>(R.id.learn_button)
+        val settingsButton = findViewById<Button>(R.id.settings_button)
+
+        loadSettingsFromFile()
 
         listsData.addAll(readListData(this))
 
@@ -98,12 +110,26 @@ class MainActivity : AppCompatActivity() {
             if (listsData.isNotEmpty()) {
                 val intent = Intent(this, LearnActivity::class.java).apply {
                     putExtra("fileName", listsData[0].fileName)
+
+                    // Pass settings
+                    putExtra("DAYS_SINCE", currentDaysSince)
+                    putExtra("CORRECT", currentCorrect)
+                    putExtra("TESTED", currentTested)
                 }
                 startActivity(intent)
-            }
-            else {
+            } else {
                 Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        settingsButton.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
+            intent.putExtra("DAYS_SINCE", currentDaysSince)
+            intent.putExtra("CORRECT", currentCorrect)
+            intent.putExtra("TESTED", currentTested)
+            intent.putExtra("TOP_N_SELECTED", isTopNSelected)
+            intent.putExtra("TOP_N_VALUE", currentTopN)
+            startActivityForResult(intent, SETTINGS_REQUEST_CODE)
         }
     }
 
@@ -149,6 +175,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
+            val allLines = inputFile.readLines()
+            val header = allLines.firstOrNull() ?: ""
+            val dataLines = if (allLines.size > 1) allLines.drop(1) else emptyList()
+
+            val linesToSave: List<String> = if (!isTopNSelected) {
+                // Top N not selected → return all rows
+                allLines
+            } else {
+                // Top N selected → return header + top N rows
+                val n = minOf(currentTopN, dataLines.size)
+                listOf(header) + dataLines.take(n)
+            }
+
             val mimeType = "text/csv"
             val outputStream: OutputStream?
             val resolver = contentResolver
@@ -168,10 +207,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 outputStream = resolver.openOutputStream(uri)
-                inputFile.inputStream().use { input ->
-                    outputStream?.use { out ->
-                        input.copyTo(out)
-                    }
+                outputStream?.bufferedWriter().use { writer ->
+                    linesToSave.forEach { writer?.write(it + "\n") }
                 }
 
                 values.clear()
@@ -181,7 +218,9 @@ class MainActivity : AppCompatActivity() {
             } else { //if legacy
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val outputFile = File(downloadsDir, fileName)
-                inputFile.copyTo(outputFile, overwrite = true)
+                outputFile.bufferedWriter().use { writer ->
+                    linesToSave.forEach { writer.write(it + "\n") }
+                }
             }
 
             Toast.makeText(this, "File saved to Downloads.", Toast.LENGTH_SHORT).show()
@@ -189,6 +228,57 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Error saving file: ${e.message}.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode != Activity.RESULT_OK || data == null) return
+
+        when (requestCode) {
+
+            SETTINGS_REQUEST_CODE -> {
+                // Retrieve updated values from SettingsActivity
+                currentDaysSince = data.getFloatExtra("DAYS_SINCE", currentDaysSince)
+                currentCorrect = data.getFloatExtra("CORRECT", currentCorrect)
+                currentTested = data.getFloatExtra("TESTED", currentTested)
+                isTopNSelected = data.getBooleanExtra("TOP_N_SELECTED", isTopNSelected)
+                currentTopN = data.getIntExtra("TOP_N_VALUE", currentTopN)
+
+                saveSettingsToFile()
+            }
+        }
+    }
+
+    private fun saveSettingsToFile() {
+        try {
+            val fileOutput = openFileOutput(SETTINGS_FILE, MODE_PRIVATE)
+            val content = "$currentDaysSince,$currentCorrect,$currentTested,$isTopNSelected,$currentTopN"
+            fileOutput.write(content.toByteArray())
+            fileOutput.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun loadSettingsFromFile() {
+        try {
+            val fileInput = openFileInput(SETTINGS_FILE)
+            val content = fileInput.bufferedReader().use { it.readText() }
+            fileInput.close()
+
+            val parts = content.split(",")
+            if (parts.size == 5) {
+                currentDaysSince = parts[0].toFloatOrNull() ?: 1f
+                currentCorrect = parts[1].toFloatOrNull() ?: 1f
+                currentTested = parts[2].toFloatOrNull() ?: 1f
+                isTopNSelected = parts[3].toBoolean()
+                currentTopN = parts[4].toIntOrNull() ?: 26
+            }
+        } catch (e: Exception) {
+            // File might not exist yet — use default values
+            e.printStackTrace()
         }
     }
 }

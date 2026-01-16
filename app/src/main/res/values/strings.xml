@@ -16,4 +16,16 @@
     <string name="learn_button_text">Learn</string>
     <string name="load_button_text">Load</string>
     <string name="export_button_text">Export</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_learn_title">Learn</string>
+    <string name="settings_export_title">Export</string>
+    <string name="settings_learn_days_since_title">Days Since Weight</string>
+    <string name="settings_learn_correct_title">Correct Weight</string>
+    <string name="settings_learn_tested_title">Tested Weight</string>
+    <string name="settings_export_rows_title">Number of Rows</string>
+    <string name="settings_radio_all">All</string>
+    <string name="settings_radio_topn">Top N</string>
+    <string name="settings_return_button">Return &amp; Save</string>
+    <string name="delete_button">Delete</string>
+    <string name="topn_edit_text_hint">N</string>
 </resources>

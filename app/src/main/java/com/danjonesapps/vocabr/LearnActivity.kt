@@ -23,9 +23,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import java.io.File
 import java.time.LocalDate
 
-var weightDaysSince: Int = 1
-var weightCorrect: Int = 1
-var weightTested: Int = 1
+var weightDaysSince: Float = 1f
+var weightCorrect: Float = 1f
+var weightTested: Float = 1f
 
 var testedMaxCap: Int = 15
 var testedCapWeighting: Double = 0.9
@@ -97,6 +97,9 @@ class LearnActivity : AppCompatActivity() {
             terminate()
             return
         }
+        weightDaysSince = intent.getFloatExtra("DAYS_SINCE", 1f)
+        weightCorrect = intent.getFloatExtra("CORRECT", 1f)
+        weightTested = intent.getFloatExtra("TESTED", 1f)
 
         listsData = readListData(this)
 

@@ -224,7 +224,7 @@ fun calcLearntScore(df: MutableList<TermData>, uniqueIds: List<Int>?= null): Mut
         val testedCountNormalised = lowerPiece + upperPiece
 
         // Compute new learntScore
-        val denominator = (weightDaysSince + weightCorrect + weightTested).toFloat()
+        val denominator = (weightDaysSince + weightCorrect + weightTested)
 
         val numerator = (daysSinceLastTestNormalised * weightDaysSince) +
                 (correctPercentage * weightCorrect) +
