@@ -6,8 +6,8 @@
     <string name="incorrect_button_text">X</string>
     <string name="correct_button_text">✓</string>
     <string name="save_button_text">Save</string>
-    <string name="quit_button_text">X</string>
-    <string name="term_type_default_text">term type</string>
+    <string name="quit_button_text">Quit</string>
+    <string name="term_type_default_text">(phrase)</string>
     <string name="learnt_score_default_text">learnt score: 0%</string>
     <string name="term_text_default">je mange des pommes</string>
     <string name="count_text_default">0</string>
@@ -28,4 +28,5 @@
     <string name="settings_return_button">Return &amp; Save</string>
     <string name="delete_button">Delete</string>
     <string name="topn_edit_text_hint">N</string>
+    <string name="definition_text_default">I eat apples</string>
 </resources>

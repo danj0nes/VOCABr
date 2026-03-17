@@ -19,4 +19,5 @@
     <color name="button_burgundy">#DD3078</color>
     <color name="invisible">#00000000</color>
     <color name="mtrl_textinput_default_box_stroke_color">#BEBEBE</color>
+    <color name="example_definition">#878787</color>
 </resources>
