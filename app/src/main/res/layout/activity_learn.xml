@@ -178,10 +178,10 @@
                             android:textSize="23sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintBottom_toTopOf="@id/text_definition"/>
+                            app:layout_constraintBottom_toTopOf="@id/text_sub_term"/>
 
                         <TextView
-                            android:id="@+id/text_definition"
+                            android:id="@+id/text_sub_term"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/definition_text_default"
@@ -203,15 +203,16 @@
                 android:orientation="vertical"
                 android:clickable="true"
                 android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 android:padding="17sp"
                 app:layout_constraintTop_toBottomOf="@+id/header_card"
                 app:layout_constraintBottom_toBottomOf="parent">
                 <TextView
-                    android:id="@+id/example_1"
+                    android:id="@+id/click_to_hint"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:text="* click to see examples *"
-                    android:textColor="@color/term_white_def"
+                    android:textColor="@color/example_definition"
                     android:fontFamily="@font/cascadia_mono"
                     android:textSize="17sp"
                     android:textStyle="bold"
@@ -219,6 +220,19 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"/>
+
+                <TextView
+                    android:id="@+id/example_1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="je n'en reviens pas"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
 
                 <TextView
                     android:id="@+id/example_1_def"

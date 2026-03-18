@@ -12,14 +12,15 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.text.TextWatcher
-import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.card.MaterialCardView
 import java.io.File
 import java.time.LocalDate
 
@@ -44,14 +45,23 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var backButton: Button
     private lateinit var correctButton: Button
-    private lateinit var showButton: Button
+    private lateinit var termCard: MaterialCardView
+    private lateinit var examplesCard: ConstraintLayout
     private lateinit var incorrectButton: Button
-    private lateinit var learntScoreTextView: TextView
+
     private lateinit var termTypeTextView: TextView
     private lateinit var termTextView: TextView
     private lateinit var quittingTextView: TextView
     private lateinit var correctTextView: TextView
     private lateinit var incorrectTextView: TextView
+    private lateinit var termSubTextView: TextView
+    private lateinit var examplesHintTextView: TextView
+    private lateinit var exampleOneTextView: TextView
+    private lateinit var exampleTwoTextView: TextView
+    private lateinit var exampleThreeTextView: TextView
+    private lateinit var exampleOneDefTextView: TextView
+    private lateinit var exampleTwoDefTextView: TextView
+    private lateinit var exampleThreeDefTextView: TextView
 
     private lateinit var recyclerView: CustomRecyclerView
     private lateinit var adapter: TermAdapter
@@ -72,6 +82,7 @@ class LearnActivity : AppCompatActivity() {
     private var quitting: Boolean = false
     private var showingTerm: Boolean = false
     private var resetFlip: Boolean = true
+    private var showingExamples: Boolean = false
 
     private var waitingForCommand: Boolean = false
 
@@ -140,7 +151,7 @@ class LearnActivity : AppCompatActivity() {
         reversing = false
 
         // SET LEARNT SCORE
-        learntScoreTextView.text = "learnt score: ${String.format("%.1f%%", topTerm.learntScore * 100f)}"
+        //learntScoreTextView.text = "learnt score: ${String.format("%.1f%%", topTerm.learntScore * 100f)}"
 
         // SET TERM TYPE
         termTypeTextView.text = topTerm.termType
@@ -148,31 +159,77 @@ class LearnActivity : AppCompatActivity() {
         // ENSURE TERM IS SHOWN IF NEW TERM
         if (resetFlip) {
             showingTerm = true
+            showingExamples = false
         }
         else {
             resetFlip = true
         }
 
         // SET TERM
-        if (showingTerm) {
-            if (topTerm.repeatIncorrect) {
-                termTextView.setTextColor(getColor(R.color.quitting_yellow))
-            }
-            else {
-                termTextView.setTextColor(getColor(R.color.term_white))
-            }
-            termTextView.text = topTerm.term
+        if (topTerm.repeatIncorrect) {
+            termTextView.setTextColor(getColor(R.color.quitting_yellow))
+            termSubTextView.setTextColor(getColor(R.color.quitting_yellow_def))
         }
         else {
-            if (topTerm.repeatIncorrect) {
-                termTextView.setTextColor(getColor(R.color.quitting_yellow_def))
-            }
-            else {
-                termTextView.setTextColor(getColor(R.color.term_white_def))
-            }
+            termTextView.setTextColor(getColor(R.color.term_white))
+            termSubTextView.setTextColor(getColor(R.color.term_white_def))
+        }
+        if (showingTerm) {
+            termTextView.text = topTerm.term
+            termSubTextView.visibility = View.GONE
+        }
+        else {
             termTextView.text = topTerm.definition
+            termSubTextView.text = topTerm.term
+            termSubTextView.visibility = View.VISIBLE
         }
 
+        // SET EXAMPLES
+        val examples = listOf(
+            Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
+            Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
+            Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
+        )
+
+        val hasNoExamples = examples.all { it.first == null && it.second == null }
+
+        if (hasNoExamples) {
+            examplesHintTextView.apply {
+                visibility = View.VISIBLE
+                text = "no examples found"
+            }
+            examples.forEach { (_, _, views) ->
+                views.first.visibility = View.GONE
+                views.second.visibility = View.GONE
+            }
+        } else if (showingExamples) {
+            examplesHintTextView.visibility = View.GONE
+
+            examples.forEach { (example, def, views) ->
+                if (example != null && def != null) {
+                    views.first.apply {
+                        text = example
+                        visibility = View.VISIBLE
+                    }
+                    views.second.apply {
+                        text = def
+                        visibility = View.VISIBLE
+                    }
+                } else {
+                    views.first.visibility = View.GONE
+                    views.second.visibility = View.GONE
+                }
+            }
+        } else {
+            examplesHintTextView.apply {
+                visibility = View.VISIBLE
+                text = "* click to see examples *"
+            }
+            examples.forEach { (_, _, views) ->
+                views.first.visibility = View.GONE
+                views.second.visibility = View.GONE
+            }
+        }
 
         // SET QUITTING
         if (quitting) {
@@ -282,23 +339,72 @@ class LearnActivity : AppCompatActivity() {
         }
         else if (buttonCommand == ButtonCommand.SHOW) {
             showingTerm = !showingTerm
-            if (showingTerm) {
-                if (topTerm.repeatIncorrect) {
-                    termTextView.setTextColor(getColor(R.color.quitting_yellow))
-                }
-                else {
-                    termTextView.setTextColor(getColor(R.color.term_white))
-                }
-                termTextView.text = topTerm.term
+            if (topTerm.repeatIncorrect) {
+                termTextView.setTextColor(getColor(R.color.quitting_yellow))
+                termSubTextView.setTextColor(getColor(R.color.quitting_yellow_def))
             }
             else {
-                if (topTerm.repeatIncorrect) {
-                    termTextView.setTextColor(getColor(R.color.quitting_yellow_def))
-                }
-                else {
-                    termTextView.setTextColor(getColor(R.color.term_white_def))
-                }
+                termTextView.setTextColor(getColor(R.color.term_white))
+                termSubTextView.setTextColor(getColor(R.color.term_white_def))
+            }
+            if (showingTerm) {
+                termTextView.text = topTerm.term
+                termSubTextView.visibility = View.GONE
+            }
+            else {
                 termTextView.text = topTerm.definition
+                termSubTextView.text = topTerm.term
+                termSubTextView.visibility = View.VISIBLE
+            }
+            waitingForCommand = true
+            return
+        }
+        else if (buttonCommand == ButtonCommand.EXAMPLES) {
+            showingExamples = !showingExamples
+            val examples = listOf(
+                Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
+                Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
+                Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
+            )
+
+            val hasNoExamples = examples.all { it.first == null && it.second == null }
+
+            if (hasNoExamples) {
+                examplesHintTextView.apply {
+                    visibility = View.VISIBLE
+                    text = "no examples found"
+                }
+                examples.forEach { (_, _, views) ->
+                    views.first.visibility = View.GONE
+                    views.second.visibility = View.GONE
+                }
+            } else if (showingExamples) {
+                examplesHintTextView.visibility = View.GONE
+
+                examples.forEach { (example, def, views) ->
+                    if (example != null && def != null) {
+                        views.first.apply {
+                            text = example
+                            visibility = View.VISIBLE
+                        }
+                        views.second.apply {
+                            text = def
+                            visibility = View.VISIBLE
+                        }
+                    } else {
+                        views.first.visibility = View.GONE
+                        views.second.visibility = View.GONE
+                    }
+                }
+            } else {
+                examplesHintTextView.apply {
+                    visibility = View.VISIBLE
+                    text = "* click to see examples *"
+                }
+                examples.forEach { (_, _, views) ->
+                    views.first.visibility = View.GONE
+                    views.second.visibility = View.GONE
+                }
             }
             waitingForCommand = true
             return
@@ -483,16 +589,26 @@ class LearnActivity : AppCompatActivity() {
         correctButton.setOnClickListener { buttonPressed(ButtonCommand.GOT) }
         incorrectButton = findViewById(R.id.button_incorrect)
         incorrectButton.setOnClickListener { buttonPressed(ButtonCommand.NOT) }
-        showButton = findViewById(R.id.button_show)
-        showButton.setOnClickListener { buttonPressed(ButtonCommand.SHOW) }
+
+        termCard = findViewById(R.id.header_card)
+        termCard.setOnClickListener { buttonPressed(ButtonCommand.SHOW) }
+        examplesCard = findViewById(R.id.examples)
+        examplesCard.setOnClickListener { buttonPressed(ButtonCommand.EXAMPLES) }
 
         //text views
-        learntScoreTextView = findViewById(R.id.text_learnt_score)
         termTypeTextView = findViewById(R.id.text_term_type)
         termTextView = findViewById(R.id.text_term)
         quittingTextView = findViewById(R.id.text_quitting)
         correctTextView = findViewById(R.id.text_correct)
         incorrectTextView = findViewById(R.id.text_incorrect)
+        termSubTextView = findViewById(R.id.text_sub_term)
+        examplesHintTextView = findViewById(R.id.click_to_hint)
+        exampleOneTextView = findViewById(R.id.example_1)
+        exampleTwoTextView = findViewById(R.id.example_2)
+        exampleThreeTextView = findViewById(R.id.example_3)
+        exampleOneDefTextView = findViewById(R.id.example_1_def)
+        exampleTwoDefTextView = findViewById(R.id.example_2_def)
+        exampleThreeDefTextView = findViewById(R.id.example_3_def)
 
         //others
         searchInput = findViewById(R.id.search_input)

@@ -35,7 +35,19 @@ data class TermData(
     @CsvBindByName(column = "LATEST_RESULTS")
     var latestResults: String = "No Recent Results",
     @CsvBindByName(column = "TESTED_COUNT")
-    var testedCount: Int = 0
+    var testedCount: Int = 0,
+    @CsvBindByName(column = "EXAMPLE_1")
+    var exampleOne: String? = null,
+    @CsvBindByName(column = "EXAMPLE_2")
+    var exampleTwo: String? = null,
+    @CsvBindByName(column = "EXAMPLE_3")
+    var exampleThree: String? = null,
+    @CsvBindByName(column = "EXAMPLE_EN_1")
+    var exampleDefOne: String? = null,
+    @CsvBindByName(column = "EXAMPLE_EN_2")
+    var exampleDefTwo: String? = null,
+    @CsvBindByName(column = "EXAMPLE_EN_3")
+    var exampleDefThree: String? = null,
 )
 
 data class Quad<A, B, C, D>(val recent: A, val repeatIncorrectIds: B, val futureTerms: C, val selectedTerm: D)
@@ -46,7 +58,13 @@ data class SelectedTerm(
     val termType: String,
     val definition: String,
     val learntScore: Float,
-    val repeatIncorrect: Boolean
+    val repeatIncorrect: Boolean,
+    val exampleOne: String?,
+    val exampleTwo: String?,
+    val exampleThree: String?,
+    val exampleDefOne: String?,
+    val exampleDefTwo: String?,
+    val exampleDefThree: String?
 )
 
 data class SavedListData(
@@ -119,6 +137,7 @@ enum class ButtonCommand {
     BACK,
     NOT,
     SHOW,
+    EXAMPLES,
     GOT
 }
 
@@ -338,7 +357,13 @@ fun getTop(
             termType = row.termType,
             definition = row.definition,
             learntScore = row.learntScore,
-            repeatIncorrect = repeat
+            repeatIncorrect = repeat,
+            exampleOne = row.exampleOne,
+            exampleTwo = row.exampleTwo,
+            exampleThree = row.exampleThree,
+            exampleDefOne = row.exampleDefOne,
+            exampleDefTwo = row.exampleDefTwo,
+            exampleDefThree = row.exampleDefThree
         )
     }
 
