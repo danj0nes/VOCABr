@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
@@ -19,6 +20,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.setPadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
 import java.io.File
@@ -82,7 +84,6 @@ class LearnActivity : AppCompatActivity() {
     private var quitting: Boolean = false
     private var showingTerm: Boolean = false
     private var resetFlip: Boolean = true
-    private var showingExamples: Boolean = false
 
     private var waitingForCommand: Boolean = false
 
@@ -159,7 +160,6 @@ class LearnActivity : AppCompatActivity() {
         // ENSURE TERM IS SHOWN IF NEW TERM
         if (resetFlip) {
             showingTerm = true
-            showingExamples = false
         }
         else {
             resetFlip = true
@@ -177,57 +177,45 @@ class LearnActivity : AppCompatActivity() {
         if (showingTerm) {
             termTextView.text = topTerm.term
             termSubTextView.visibility = View.GONE
+            examplesCard.visibility = View.GONE
         }
         else {
             termTextView.text = topTerm.definition
             termSubTextView.text = topTerm.term
             termSubTextView.visibility = View.VISIBLE
-        }
+            examplesCard.visibility = View.VISIBLE
 
-        // SET EXAMPLES
-        val examples = listOf(
-            Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
-            Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
-            Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
-        )
+            // SET EXAMPLES
+            val examples = listOf(
+                Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
+                Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
+                Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
+            )
+            val hasNoExamples = examples.all { it.first.isNullOrEmpty() || it.second.isNullOrEmpty() }
 
-        val hasNoExamples = examples.all { it.first == null && it.second == null }
-
-        if (hasNoExamples) {
-            examplesHintTextView.apply {
-                visibility = View.VISIBLE
-                text = "no examples found"
-            }
-            examples.forEach { (_, _, views) ->
-                views.first.visibility = View.GONE
-                views.second.visibility = View.GONE
-            }
-        } else if (showingExamples) {
-            examplesHintTextView.visibility = View.GONE
-
-            examples.forEach { (example, def, views) ->
-                if (example != null && def != null) {
-                    views.first.apply {
-                        text = example
-                        visibility = View.VISIBLE
-                    }
-                    views.second.apply {
-                        text = def
-                        visibility = View.VISIBLE
-                    }
-                } else {
+            if (hasNoExamples) {
+                examplesHintTextView.visibility = View.VISIBLE
+                examples.forEach { (_, _, views) ->
                     views.first.visibility = View.GONE
                     views.second.visibility = View.GONE
                 }
-            }
-        } else {
-            examplesHintTextView.apply {
-                visibility = View.VISIBLE
-                text = "* click to see examples *"
-            }
-            examples.forEach { (_, _, views) ->
-                views.first.visibility = View.GONE
-                views.second.visibility = View.GONE
+            } else {
+                examplesHintTextView.visibility = View.GONE
+                examples.forEach { (example, def, views) ->
+                    if (!example.isNullOrEmpty() && !def.isNullOrEmpty()) {
+                        views.first.apply {
+                            text = example
+                            visibility = View.VISIBLE
+                        }
+                        views.second.apply {
+                            text = def
+                            visibility = View.VISIBLE
+                        }
+                    } else {
+                        views.first.visibility = View.GONE
+                        views.second.visibility = View.GONE
+                    }
+                }
             }
         }
 
@@ -350,62 +338,48 @@ class LearnActivity : AppCompatActivity() {
             if (showingTerm) {
                 termTextView.text = topTerm.term
                 termSubTextView.visibility = View.GONE
+                examplesCard.visibility = View.GONE
             }
             else {
                 termTextView.text = topTerm.definition
                 termSubTextView.text = topTerm.term
                 termSubTextView.visibility = View.VISIBLE
-            }
-            waitingForCommand = true
-            return
-        }
-        else if (buttonCommand == ButtonCommand.EXAMPLES) {
-            showingExamples = !showingExamples
-            val examples = listOf(
-                Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
-                Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
-                Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
-            )
+                examplesCard.visibility = View.VISIBLE
 
-            val hasNoExamples = examples.all { it.first == null && it.second == null }
+                // SET EXAMPLES
+                val examples = listOf(
+                    Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
+                    Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
+                    Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
+                )
+                val hasNoExamples = examples.all { it.first.isNullOrEmpty() || it.second.isNullOrEmpty() }
 
-            if (hasNoExamples) {
-                examplesHintTextView.apply {
-                    visibility = View.VISIBLE
-                    text = "no examples found"
-                }
-                examples.forEach { (_, _, views) ->
-                    views.first.visibility = View.GONE
-                    views.second.visibility = View.GONE
-                }
-            } else if (showingExamples) {
-                examplesHintTextView.visibility = View.GONE
-
-                examples.forEach { (example, def, views) ->
-                    if (example != null && def != null) {
-                        views.first.apply {
-                            text = example
-                            visibility = View.VISIBLE
-                        }
-                        views.second.apply {
-                            text = def
-                            visibility = View.VISIBLE
-                        }
-                    } else {
+                if (hasNoExamples) {
+                    examplesHintTextView.visibility = View.VISIBLE
+                    examples.forEach { (_, _, views) ->
                         views.first.visibility = View.GONE
                         views.second.visibility = View.GONE
                     }
-                }
-            } else {
-                examplesHintTextView.apply {
-                    visibility = View.VISIBLE
-                    text = "* click to see examples *"
-                }
-                examples.forEach { (_, _, views) ->
-                    views.first.visibility = View.GONE
-                    views.second.visibility = View.GONE
+                } else {
+                    examplesHintTextView.visibility = View.GONE
+                    examples.forEach { (example, def, views) ->
+                        if (!example.isNullOrEmpty() && !def.isNullOrEmpty()) {
+                            views.first.apply {
+                                text = example
+                                visibility = View.VISIBLE
+                            }
+                            views.second.apply {
+                                text = def
+                                visibility = View.VISIBLE
+                            }
+                        } else {
+                            views.first.visibility = View.GONE
+                            views.second.visibility = View.GONE
+                        }
+                    }
                 }
             }
+
             waitingForCommand = true
             return
         }
@@ -590,10 +564,9 @@ class LearnActivity : AppCompatActivity() {
         incorrectButton = findViewById(R.id.button_incorrect)
         incorrectButton.setOnClickListener { buttonPressed(ButtonCommand.NOT) }
 
-        termCard = findViewById(R.id.header_card)
+        termCard = findViewById(R.id.term_card)
         termCard.setOnClickListener { buttonPressed(ButtonCommand.SHOW) }
         examplesCard = findViewById(R.id.examples)
-        examplesCard.setOnClickListener { buttonPressed(ButtonCommand.EXAMPLES) }
 
         //text views
         termTypeTextView = findViewById(R.id.text_term_type)
@@ -602,7 +575,7 @@ class LearnActivity : AppCompatActivity() {
         correctTextView = findViewById(R.id.text_correct)
         incorrectTextView = findViewById(R.id.text_incorrect)
         termSubTextView = findViewById(R.id.text_sub_term)
-        examplesHintTextView = findViewById(R.id.click_to_hint)
+        examplesHintTextView = findViewById(R.id.examples_hint)
         exampleOneTextView = findViewById(R.id.example_1)
         exampleTwoTextView = findViewById(R.id.example_2)
         exampleThreeTextView = findViewById(R.id.example_3)

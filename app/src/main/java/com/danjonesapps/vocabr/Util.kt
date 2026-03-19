@@ -137,7 +137,6 @@ enum class ButtonCommand {
     BACK,
     NOT,
     SHOW,
-    EXAMPLES,
     GOT
 }
 
