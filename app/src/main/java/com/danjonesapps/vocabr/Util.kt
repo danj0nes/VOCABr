@@ -48,6 +48,8 @@ data class TermData(
     var exampleDefTwo: String? = null,
     @CsvBindByName(column = "EXAMPLE_EN_3")
     var exampleDefThree: String? = null,
+    @CsvBindByName(column = "IPA")
+    var ipa: String? = null,
 )
 
 data class Quad<A, B, C, D>(val recent: A, val repeatIncorrectIds: B, val futureTerms: C, val selectedTerm: D)
@@ -64,7 +66,8 @@ data class SelectedTerm(
     val exampleThree: String?,
     val exampleDefOne: String?,
     val exampleDefTwo: String?,
-    val exampleDefThree: String?
+    val exampleDefThree: String?,
+    val ipa: String?,
 )
 
 data class SavedListData(
@@ -362,7 +365,8 @@ fun getTop(
             exampleThree = row.exampleThree,
             exampleDefOne = row.exampleDefOne,
             exampleDefTwo = row.exampleDefTwo,
-            exampleDefThree = row.exampleDefThree
+            exampleDefThree = row.exampleDefThree,
+            ipa = row.ipa
         )
     }
 

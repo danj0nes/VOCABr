@@ -176,7 +176,12 @@ class LearnActivity : AppCompatActivity() {
         }
         if (showingTerm) {
             termTextView.text = topTerm.term
-            termSubTextView.visibility = View.GONE
+            if (topTerm.ipa.isNullOrEmpty()) {
+                termSubTextView.visibility = View.GONE
+            } else {
+                termSubTextView.text = topTerm.ipa
+                termSubTextView.visibility = View.VISIBLE
+            }
             examplesCard.visibility = View.GONE
         }
         else {
@@ -337,7 +342,12 @@ class LearnActivity : AppCompatActivity() {
             }
             if (showingTerm) {
                 termTextView.text = topTerm.term
-                termSubTextView.visibility = View.GONE
+                if (topTerm.ipa.isNullOrEmpty()) {
+                    termSubTextView.visibility = View.GONE
+                } else {
+                    termSubTextView.text = topTerm.ipa
+                    termSubTextView.visibility = View.VISIBLE
+                }
                 examplesCard.visibility = View.GONE
             }
             else {
