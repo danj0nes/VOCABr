@@ -461,8 +461,9 @@ class LearnActivity : AppCompatActivity() {
                 val searchQuery = query.lowercase()
 
                 val filteredList = df.filter {
-                    it.definition.lowercase().contains(searchQuery) ||
-                            it.term.lowercase().contains(searchQuery)
+                    (it.definition.lowercase().contains(searchQuery) ||
+                            it.term.lowercase().contains(searchQuery)) &&
+                            it.uniqueId != selectedTerm?.id
                 }.sortedWith(compareByDescending {
                     // Prioritize items where term or definition starts with the query
                     it.definition.lowercase().startsWith(searchQuery) || it.term.lowercase().startsWith(searchQuery)

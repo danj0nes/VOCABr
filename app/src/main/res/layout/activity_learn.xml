@@ -166,10 +166,8 @@
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="30dp"
-                        android:layout_marginVertical="20dp"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent">
+                        android:layout_margin="30dp"
+                        app:layout_constraintTop_toTopOf="parent">
                         <TextView
                             android:id="@+id/text_term"
                             android:layout_width="wrap_content"
