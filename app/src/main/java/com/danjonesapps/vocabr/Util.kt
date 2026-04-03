@@ -347,9 +347,10 @@ fun getTop(
         > {
 
     // Filter df by desired term types and list number range, then map by uniqueId for fast lookup
-    val tempDf: MutableList<TermData> = df.filter { row ->
-        row.termType in desiredTermTypes
-    }.toMutableList()
+    //val tempDf: MutableList<TermData> = df.filter { row ->
+    //    row.termType in desiredTermTypes
+    //}.toMutableList()
+    val tempDf: MutableList<TermData> = df.toMutableList()
 
     fun termData(id: Int, repeat: Boolean): SelectedTerm? {
         val row = tempDf.find { it.uniqueId == id } ?: return null

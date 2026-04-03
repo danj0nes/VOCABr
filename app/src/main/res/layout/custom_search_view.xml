@@ -23,7 +23,7 @@
         android:layout_height="48dp"
         android:hint="Search terms..."
         android:textColor="@color/white"
-        android:textSize="18sp"
+        android:textSize="18dp"
         android:fontFamily="@font/cascadia_mono"
         android:textColorHint="@color/term_white_def"
         android:background="@null"
