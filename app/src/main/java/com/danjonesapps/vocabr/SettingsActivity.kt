@@ -18,6 +18,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var daysSinceSlider: Slider
     private lateinit var correctSlider: Slider
     private lateinit var testedSlider: Slider
+    private lateinit var delayInputLayout: TextInputLayout
+    private lateinit var delayEditText: TextInputEditText
 
     private lateinit var radioGroup: RadioGroup
     private lateinit var radioAll: RadioButton
@@ -29,6 +31,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var returnButton: Button
 
     private var topNValue: Int = 26
+    private var delayValue: Int = 15
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +50,9 @@ class SettingsActivity : AppCompatActivity() {
         correctSlider = findViewById(R.id.settings_correct_slider)
         testedSlider = findViewById(R.id.settings_tested_slider)
 
+        delayInputLayout = findViewById(R.id.settings_delay_input)
+        delayEditText = findViewById(R.id.delayEditText)
+
         radioGroup = findViewById(R.id.radioGroup)
         radioAll = findViewById(R.id.settings_radio_all)
         radioTopN = findViewById(R.id.settings_radio_topn)
@@ -64,6 +70,7 @@ class SettingsActivity : AppCompatActivity() {
         val tested = intent.getFloatExtra("TESTED", 1f)
         val topNSelected = intent.getBooleanExtra("TOP_N_SELECTED", false)
         topNValue = intent.getIntExtra("TOP_N_VALUE", 26)
+        delayValue = intent.getIntExtra("DELAY_VALUE", 15)
 
         // Set initial slider values
         daysSinceSlider.value = daysSince
@@ -80,6 +87,9 @@ class SettingsActivity : AppCompatActivity() {
             topNInputLayout.isEnabled = false
             topNEditText.setText("")
         }
+
+        // Set delay value input
+        delayEditText.setText(delayValue.toString())
 
         // -------------------------
         // 3. Enable/disable Top N input based on radio selection
@@ -112,6 +122,9 @@ class SettingsActivity : AppCompatActivity() {
 
                 val nValue = topNEditText.text.toString().toIntOrNull() ?: topNValue
                 putExtra("TOP_N_VALUE", nValue)
+
+                val delayValue = delayEditText.text.toString().toIntOrNull() ?: delayValue
+                putExtra("DELAY_VALUE", delayValue)
             }
             setResult(Activity.RESULT_OK, intent)
             finish()

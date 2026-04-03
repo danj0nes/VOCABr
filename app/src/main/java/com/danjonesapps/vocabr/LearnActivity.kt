@@ -112,6 +112,8 @@ class LearnActivity : AppCompatActivity() {
         weightDaysSince = intent.getFloatExtra("DAYS_SINCE", 1f)
         weightCorrect = intent.getFloatExtra("CORRECT", 1f)
         weightTested = intent.getFloatExtra("TESTED", 1f)
+        allowRepeatsAfter = intent.getIntExtra("DELAY_VALUE", 15)
+
 
         listsData = readListData(this)
 

@@ -29,4 +29,6 @@
     <string name="delete_button">Delete</string>
     <string name="topn_edit_text_hint">N</string>
     <string name="definition_text_default">I eat apples</string>
+    <string name="settings_learn_delay_text">Term Repeat Delay</string>
+    <string name="settings_learn_delay_hint">Delay</string>
 </resources>

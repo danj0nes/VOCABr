@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private var currentTested: Float = 1f
     private var isTopNSelected: Boolean = false
     private var currentTopN: Int = 26
+    private var currentDelay: Int = 15
     companion object {
         const val SETTINGS_REQUEST_CODE = 1001
         const val SETTINGS_FILE = "settings.txt"
@@ -115,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                     putExtra("DAYS_SINCE", currentDaysSince)
                     putExtra("CORRECT", currentCorrect)
                     putExtra("TESTED", currentTested)
+                    putExtra("DELAY_VALUE", currentDelay)
                 }
                 startActivity(intent)
             } else {
@@ -129,6 +131,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("TESTED", currentTested)
             intent.putExtra("TOP_N_SELECTED", isTopNSelected)
             intent.putExtra("TOP_N_VALUE", currentTopN)
+            intent.putExtra("DELAY_VALUE", currentDelay)
             startActivityForResult(intent, SETTINGS_REQUEST_CODE)
         }
     }
@@ -245,6 +248,7 @@ class MainActivity : AppCompatActivity() {
                 currentTested = data.getFloatExtra("TESTED", currentTested)
                 isTopNSelected = data.getBooleanExtra("TOP_N_SELECTED", isTopNSelected)
                 currentTopN = data.getIntExtra("TOP_N_VALUE", currentTopN)
+                currentDelay = data.getIntExtra("DELAY_VALUE", currentDelay)
 
                 saveSettingsToFile()
             }
@@ -254,7 +258,7 @@ class MainActivity : AppCompatActivity() {
     private fun saveSettingsToFile() {
         try {
             val fileOutput = openFileOutput(SETTINGS_FILE, MODE_PRIVATE)
-            val content = "$currentDaysSince,$currentCorrect,$currentTested,$isTopNSelected,$currentTopN"
+            val content = "$currentDaysSince,$currentCorrect,$currentTested,$isTopNSelected,$currentTopN,$currentDelay"
             fileOutput.write(content.toByteArray())
             fileOutput.close()
         } catch (e: Exception) {
@@ -269,12 +273,13 @@ class MainActivity : AppCompatActivity() {
             fileInput.close()
 
             val parts = content.split(",")
-            if (parts.size == 5) {
+            if (parts.size == 6) {
                 currentDaysSince = parts[0].toFloatOrNull() ?: 1f
                 currentCorrect = parts[1].toFloatOrNull() ?: 1f
                 currentTested = parts[2].toFloatOrNull() ?: 1f
                 isTopNSelected = parts[3].toBoolean()
                 currentTopN = parts[4].toIntOrNull() ?: 26
+                currentDelay = parts[5].toIntOrNull() ?: 15
             }
         } catch (e: Exception) {
             // File might not exist yet — use default values
