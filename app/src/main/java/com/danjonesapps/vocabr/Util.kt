@@ -18,7 +18,7 @@ import java.util.Locale
 
 data class TermData(
     @CsvBindByName(column = "UNIQUE_ID")
-    var uniqueId: Int = 0,
+    var uniqueId: Int = 1, // IS ALWAYS RE-INDEXED ON LOAD
     @CsvBindByName(column = "LEARNT_SCORE")
     var learntScore: Float = 0f,
     @CsvBindByName(column = "TERM")
@@ -26,7 +26,7 @@ data class TermData(
     @CsvBindByName(column = "DEFINITION")
     var definition: String = "definition",
     @CsvBindByName(column = "LIST_NUMBER")
-    var listNumber: Int = 0,
+    var listNumber: Int = -1, // GETS REWRITTEN ON LOAD IF MISSING
     @CsvBindByName(column = "TERM_TYPE")
     var termType: String = "term_type",
     @CsvBindByName(column = "DATE_LAST_TESTED")
@@ -416,11 +416,38 @@ fun getTop(
 
 fun loadTermDataFromCsv(file: File): List<TermData> {
     file.bufferedReader(Charsets.UTF_8).use { reader ->
-        return CsvToBeanBuilder<TermData>(reader)
+        val terms = CsvToBeanBuilder<TermData>(reader)
             .withType(TermData::class.java)
             .withIgnoreLeadingWhiteSpace(true)
             .build()
             .parse()
+
+        // -----------------------------
+        // Reindex UNIQUE_ID
+        // -----------------------------
+        terms.forEachIndexed { index, term ->
+            term.uniqueId = index + 1
+        }
+
+        // -----------------------------
+        // Assign ONE shared LIST_NUMBER
+        // to all missing rows
+        // -----------------------------
+
+        val nextListNumber = (
+                terms
+                    .map { it.listNumber }
+                    .filter { it >= 0 }
+                    .maxOrNull() ?: 0
+                ) + 1
+
+        terms.forEach { term ->
+            if (term.listNumber < 0) { // -1 is the default
+                term.listNumber = nextListNumber
+            }
+        }
+
+        return terms
     }
 }
 
