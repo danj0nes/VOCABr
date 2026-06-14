@@ -18,6 +18,7 @@
     <string name="export_button_text">Export</string>
     <string name="settings_title">Settings</string>
     <string name="settings_learn_title">Learn</string>
+    <string name="settings_list_title">List</string>
     <string name="settings_export_title">Export</string>
     <string name="settings_learn_days_since_title">Days Since Weight</string>
     <string name="settings_learn_correct_title">Correct Weight</string>

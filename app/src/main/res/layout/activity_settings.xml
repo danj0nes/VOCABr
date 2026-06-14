@@ -1,373 +1,436 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_gray"
-    tools:context=".SettingsActivity">
-
-    <com.danjonesapps.vocabr.DiagonalBackgroundView
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".SettingsActivity"
+    android:scrollbars="none"
+    android:fillViewport="true"
+    android:background="@color/background_gray">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!-- Main Title -->
-    <TextView
-        android:id="@+id/settings_title"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/settings_title"
-        android:textColor="@color/term_white"
-        android:fontFamily="@font/cascadia_mono"
-        android:textStyle="bold"
-        android:textSize="33dp"
-        android:layout_marginVertical="15dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:paddingBottom="20dp">
 
-    <!-- ==================== Learn Settings Section ==================== -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/learn_settings_card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginHorizontal="25dp"
-        app:cardCornerRadius="12dp"
-        app:strokeWidth="0dp"
-        android:backgroundTint="@color/card_gray"
-        app:layout_constraintTop_toBottomOf="@id/settings_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/export_settings_card">
+        <!-- Main Title -->
+        <TextView
+            android:id="@+id/settings_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_title"
+            android:textColor="@color/term_white"
+            android:fontFamily="@font/cascadia_mono"
+            android:textStyle="bold"
+            android:textSize="33dp"
+            android:layout_marginVertical="15dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <!-- ==================== List Settings Section ==================== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/list_settings_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="25dp"
+            android:layout_marginTop="15dp"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="0dp"
+            android:backgroundTint="@color/card_gray"
+            app:layout_constraintTop_toBottomOf="@id/settings_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/learn_header_card"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/search_gray"
-                app:shapeAppearanceOverlay="@style/TopRoundedCard"
-                app:strokeWidth="0dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/settings_learn_title"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/list_header_card"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:text="@string/settings_learn_title"
-                    android:textColor="@color/term_white"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="27dp" />
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Days Since Title -->
-            <TextView
-                android:id="@+id/settings_learn_days_since_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_learn_days_since_title"
-                android:textColor="@color/term_white_def"
-                android:fontFamily="@font/cascadia_mono"
-                android:textStyle="bold"
-                android:textSize="15dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
-                app:layout_constraintTop_toBottomOf="@id/learn_header_card"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <!-- Days Since Slider -->
-            <com.google.android.material.slider.Slider
-                android:id="@+id/settings_days_since_slider"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:valueFrom="0.0"
-                android:valueTo="1.0"
-                app:trackHeight="6dp"
-                app:thumbRadius="12dp"
-                app:thumbElevation="0dp"
-                android:paddingVertical="5dp"
-                app:haloColor="@color/card_gray"
-                app:trackColor="@color/term_white_def"
-                app:trackColorInactive="@color/term_white_def"
-                android:layout_marginHorizontal="10dp"
-                app:labelBehavior="gone"
-                app:thumbColor="@color/term_white_def_high"
-                app:layout_constraintTop_toBottomOf="@id/settings_learn_days_since_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <!-- Correct Title -->
-            <TextView
-                android:id="@+id/settings_learn_correct_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_learn_correct_title"
-                android:textColor="@color/term_white_def"
-                android:fontFamily="@font/cascadia_mono"
-                android:textStyle="bold"
-                android:textSize="15dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
-                app:layout_constraintTop_toBottomOf="@id/settings_days_since_slider"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <!-- Correct Slider -->
-            <com.google.android.material.slider.Slider
-                android:id="@+id/settings_correct_slider"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:valueFrom="0.0"
-                android:valueTo="1.0"
-                app:trackHeight="6dp"
-                app:thumbRadius="12dp"
-                app:thumbElevation="0dp"
-                app:haloColor="@color/card_gray"
-                app:trackColor="@color/term_white_def"
-                app:trackColorInactive="@color/term_white_def"
-                android:layout_marginHorizontal="10dp"
-                app:labelBehavior="gone"
-                app:thumbColor="@color/term_white_def_high"
-                app:layout_constraintTop_toBottomOf="@id/settings_learn_correct_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <!-- Tested Title -->
-            <TextView
-                android:id="@+id/settings_learn_tested_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_learn_tested_title"
-                android:textColor="@color/term_white_def"
-                android:fontFamily="@font/cascadia_mono"
-                android:textStyle="bold"
-                android:textSize="15dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
-                app:layout_constraintTop_toBottomOf="@id/settings_correct_slider"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <!-- Tested Slider -->
-            <com.google.android.material.slider.Slider
-                android:id="@+id/settings_tested_slider"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:valueFrom="0.0"
-                android:valueTo="1.0"
-                app:thumbElevation="0dp"
-                app:trackHeight="6dp"
-                app:thumbRadius="12dp"
-                app:haloColor="@color/card_gray"
-                app:trackColor="@color/term_white_def"
-                app:trackColorInactive="@color/term_white_def"
-                android:layout_marginHorizontal="10dp"
-                app:labelBehavior="gone"
-                android:layout_marginBottom="5dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/settings_learn_tested_title"
-                app:thumbColor="@color/term_white_def_high" />
-
-            <!-- Delay Title -->
-            <TextView
-                android:id="@+id/settings_learn_delay_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_learn_delay_text"
-                android:textColor="@color/term_white_def"
-                android:fontFamily="@font/cascadia_mono"
-                android:textStyle="bold"
-                android:textSize="15dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
-                app:layout_constraintTop_toBottomOf="@id/settings_tested_slider"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <!-- Delay Input -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/settings_delay_input"
-                android:layout_width="80dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="18dp"
-                android:layout_marginTop="3dp"
-                android:layout_marginBottom="10dp"
-                app:boxBackgroundMode="outline"
-                app:boxStrokeErrorColor="@color/term_white_def"
-                app:boxStrokeColor="@color/topn_stroke_color"
-                app:boxStrokeWidth="3dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/settings_learn_delay_title"
-                app:layout_constraintBottom_toBottomOf="parent">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/delayEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="15dp"
-                    android:padding="5dp"
-                    android:textColorHint="@color/term_white_def"
-                    android:textColor="@color/term_white_def"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- ==================== Export Settings Section ==================== -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/export_settings_card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="25dp"
-        android:layout_marginTop="25dp"
-        app:cardCornerRadius="12dp"
-        app:strokeWidth="0dp"
-        android:backgroundTint="@color/card_gray"
-        app:layout_constraintTop_toBottomOf="@id/learn_settings_card"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/export_header_card"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/search_gray"
-                app:shapeAppearanceOverlay="@style/TopRoundedCard"
-                app:strokeWidth="0dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <TextView
-                    android:id="@+id/settings_export_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_export_title"
-                    android:textColor="@color/term_white"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="27dp"
-                    android:layout_marginStart="15dp"
+                    android:backgroundTint="@color/search_gray"
+                    app:shapeAppearanceOverlay="@style/TopRoundedCard"
+                    app:strokeWidth="0dp"
                     app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <TextView
+                        android:id="@+id/settings_list_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_list_title"
+                        android:textColor="@color/term_white"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:textSize="27dp"
+                        android:layout_marginStart="15dp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Export Rows Title -->
+                <TextView
+                    android:id="@+id/settings_list_rows_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="list settings"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/list_header_card"
                     app:layout_constraintStart_toStartOf="parent" />
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Export Rows Title -->
-            <TextView
-                android:id="@+id/settings_export_rows_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_export_rows_title"
-                android:textColor="@color/term_white_def"
-                android:fontFamily="@font/cascadia_mono"
-                android:textStyle="bold"
-                android:textSize="15dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
-                app:layout_constraintTop_toBottomOf="@id/export_header_card"
-                app:layout_constraintStart_toStartOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <!-- RadioGroup -->
-            <RadioGroup
-                android:id="@+id/radioGroup"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginStart="10dp"
-                app:layout_constraintTop_toBottomOf="@id/settings_export_rows_title"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent">
+        <!-- ==================== Learn Settings Section ==================== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/learn_settings_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:layout_marginHorizontal="25dp"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="0dp"
+            android:backgroundTint="@color/card_gray"
+            app:layout_constraintTop_toBottomOf="@id/list_settings_card"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/export_settings_card">
 
-                <RadioButton
-                    android:id="@+id/settings_radio_all"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/learn_header_card"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/search_gray"
+                    app:shapeAppearanceOverlay="@style/TopRoundedCard"
+                    app:strokeWidth="0dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <TextView
+                        android:id="@+id/settings_learn_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="15dp"
+                        android:text="@string/settings_learn_title"
+                        android:textColor="@color/term_white"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:textSize="27dp" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Days Since Title -->
+                <TextView
+                    android:id="@+id/settings_learn_days_since_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:buttonTint="@color/term_white_def_high"
-                    android:text="@string/settings_radio_all"
-                    android:textSize="15dp"
-                    android:layout_marginEnd="10dp"
+                    android:text="@string/settings_learn_days_since_title"
                     android:textColor="@color/term_white_def"
                     android:fontFamily="@font/cascadia_mono"
                     android:textStyle="bold"
-                    android:checked="true" />
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/learn_header_card"
+                    app:layout_constraintStart_toStartOf="parent" />
 
-                <RadioButton
-                    android:id="@+id/settings_radio_topn"
+                <!-- Days Since Slider -->
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/settings_days_since_slider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0.0"
+                    android:valueTo="1.0"
+                    app:trackHeight="6dp"
+                    app:thumbRadius="12dp"
+                    app:thumbElevation="0dp"
+                    android:paddingVertical="5dp"
+                    app:haloColor="@color/card_gray"
+                    app:trackColor="@color/term_white_def"
+                    app:trackColorInactive="@color/term_white_def"
+                    android:layout_marginHorizontal="10dp"
+                    app:labelBehavior="gone"
+                    app:thumbColor="@color/term_white_def_high"
+                    app:layout_constraintTop_toBottomOf="@id/settings_learn_days_since_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- Correct Title -->
+                <TextView
+                    android:id="@+id/settings_learn_correct_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:buttonTint="@color/term_white_def_high"
-                    android:text="@string/settings_radio_topn"
-                    android:textSize="15dp"
+                    android:text="@string/settings_learn_correct_title"
                     android:textColor="@color/term_white_def"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"/>
-            </RadioGroup>
-
-            <!-- Top N Input -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/settings_topn_input"
-                android:layout_width="80dp"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:layout_marginStart="15dp"
-                app:boxBackgroundMode="outline"
-                app:boxStrokeErrorColor="@color/term_white_def"
-                app:boxStrokeColor="@color/topn_stroke_color"
-                app:boxStrokeWidth="3dp"
-                app:layout_constraintStart_toEndOf="@id/radioGroup"
-                app:layout_constraintTop_toTopOf="@id/radioGroup">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/topNEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
                     android:fontFamily="@font/cascadia_mono"
                     android:textStyle="bold"
-                    android:padding="5dp"
-                    android:textColorHint="@color/term_white_def"
-                    android:hint="@string/topn_edit_text_hint"
                     android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_days_since_slider"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <!-- Correct Slider -->
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/settings_correct_slider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0.0"
+                    android:valueTo="1.0"
+                    app:trackHeight="6dp"
+                    app:thumbRadius="12dp"
+                    app:thumbElevation="0dp"
+                    app:haloColor="@color/card_gray"
+                    app:trackColor="@color/term_white_def"
+                    app:trackColorInactive="@color/term_white_def"
+                    android:layout_marginHorizontal="10dp"
+                    app:labelBehavior="gone"
+                    app:thumbColor="@color/term_white_def_high"
+                    app:layout_constraintTop_toBottomOf="@id/settings_learn_correct_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- Tested Title -->
+                <TextView
+                    android:id="@+id/settings_learn_tested_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_learn_tested_title"
                     android:textColor="@color/term_white_def"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_correct_slider"
+                    app:layout_constraintStart_toStartOf="parent" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <!-- Tested Slider -->
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/settings_tested_slider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="0.0"
+                    android:valueTo="1.0"
+                    app:thumbElevation="0dp"
+                    app:trackHeight="6dp"
+                    app:thumbRadius="12dp"
+                    app:haloColor="@color/card_gray"
+                    app:trackColor="@color/term_white_def"
+                    app:trackColorInactive="@color/term_white_def"
+                    android:layout_marginHorizontal="10dp"
+                    app:labelBehavior="gone"
+                    android:layout_marginBottom="5dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/settings_learn_tested_title"
+                    app:thumbColor="@color/term_white_def_high" />
 
-    <!-- Return Button -->
-    <Button
-        android:id="@+id/settings_return_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/cascadia_mono"
-        android:textStyle="bold"
-        android:paddingVertical="0dp"
-        android:paddingHorizontal="13dp"
-        android:backgroundTint="@color/term_white_def_high"
-        android:text="@string/settings_return_button"
-        android:textColor="@color/term_white"
-        android:textSize="20dp"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="6dp"
-        android:layout_marginEnd="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintHorizontal_bias="0.9" />
+                <!-- Delay Title -->
+                <TextView
+                    android:id="@+id/settings_learn_delay_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_learn_delay_text"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_tested_slider"
+                    app:layout_constraintStart_toStartOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <!-- Delay Input -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/settings_delay_input"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="18dp"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="10dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxStrokeErrorColor="@color/term_white_def"
+                    app:boxStrokeColor="@color/topn_stroke_color"
+                    app:boxStrokeWidth="3dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/settings_learn_delay_title"
+                    app:layout_constraintBottom_toBottomOf="parent">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/delayEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:textSize="15dp"
+                        android:padding="5dp"
+                        android:textColorHint="@color/term_white_def"
+                        android:textColor="@color/term_white_def"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ==================== Export Settings Section ==================== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/export_settings_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="25dp"
+            android:layout_marginTop="25dp"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="0dp"
+            android:backgroundTint="@color/card_gray"
+            app:layout_constraintTop_toBottomOf="@id/learn_settings_card"
+            app:layout_constraintBottom_toTopOf="@id/settings_return_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/export_header_card"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/search_gray"
+                    app:shapeAppearanceOverlay="@style/TopRoundedCard"
+                    app:strokeWidth="0dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <TextView
+                        android:id="@+id/settings_export_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_export_title"
+                        android:textColor="@color/term_white"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:textSize="27dp"
+                        android:layout_marginStart="15dp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Export Rows Title -->
+                <TextView
+                    android:id="@+id/settings_export_rows_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_export_rows_title"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/export_header_card"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <!-- RadioGroup -->
+                <RadioGroup
+                    android:id="@+id/radioGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginStart="10dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_export_rows_title"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent">
+
+                    <RadioButton
+                        android:id="@+id/settings_radio_all"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:buttonTint="@color/term_white_def_high"
+                        android:text="@string/settings_radio_all"
+                        android:textSize="15dp"
+                        android:layout_marginEnd="10dp"
+                        android:textColor="@color/term_white_def"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:checked="true" />
+
+                    <RadioButton
+                        android:id="@+id/settings_radio_topn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:buttonTint="@color/term_white_def_high"
+                        android:text="@string/settings_radio_topn"
+                        android:textSize="15dp"
+                        android:textColor="@color/term_white_def"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"/>
+                </RadioGroup>
+
+                <!-- Top N Input -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/settings_topn_input"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:layout_marginStart="15dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxStrokeErrorColor="@color/term_white_def"
+                    app:boxStrokeColor="@color/topn_stroke_color"
+                    app:boxStrokeWidth="3dp"
+                    app:layout_constraintStart_toEndOf="@id/radioGroup"
+                    app:layout_constraintTop_toTopOf="@id/radioGroup">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/topNEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:padding="5dp"
+                        android:textColorHint="@color/term_white_def"
+                        android:hint="@string/topn_edit_text_hint"
+                        android:textSize="15dp"
+                        android:textColor="@color/term_white_def"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Return Button -->
+        <Button
+            android:id="@+id/settings_return_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/cascadia_mono"
+            android:textStyle="bold"
+            android:paddingVertical="0dp"
+            android:paddingHorizontal="13dp"
+            android:backgroundTint="@color/term_white_def_high"
+            android:text="@string/settings_return_button"
+            android:textColor="@color/term_white"
+            android:textSize="20dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginTop="20dp"
+            app:layout_constraintTop_toBottomOf="@id/export_settings_card"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintHorizontal_bias="0.9" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
