@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -13,52 +14,92 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ListAdapter(
     private val context: Context,
-    private var listsData: MutableList<SavedListData>,
-    private val onListUpdated: (MutableList<SavedListData>) -> Unit
+    private var listsData: MutableList<VocabList>,
+    private val onListUpdated: (MutableList<VocabList>) -> Unit
 ) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val listName: TextView = itemView.findViewById(R.id.listFileName)
-        val avgLearntScore: TextView = itemView.findViewById(R.id.avgLearntScore)
-        val numTerms: TextView = itemView.findViewById(R.id.numTerms)
-        val dateLastTested: TextView = itemView.findViewById(R.id.dateLastTested)
-        val radioImageView: ImageView = itemView.findViewById(R.id.radio_button)
-        val container: ConstraintLayout = itemView.findViewById(R.id.item_container)
+    inner class ViewHolder(
+        itemView: View
+    ) : RecyclerView.ViewHolder(itemView) {
+
+        val listName: TextView =
+            itemView.findViewById(R.id.listFileName)
+
+        val avgLearntScore: TextView =
+            itemView.findViewById(R.id.avgLearntScore)
+
+        val numTerms: TextView =
+            itemView.findViewById(R.id.numTerms)
+
+        val dateLastTested: TextView =
+            itemView.findViewById(R.id.dateLastTested)
+
+        val radioImageView: ImageView =
+            itemView.findViewById(R.id.radio_button)
+
+        val container: ConstraintLayout =
+            itemView.findViewById(R.id.item_container)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.item_list, parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): ViewHolder {
+        val view = LayoutInflater
+            .from(context)
+            .inflate(
+                R.layout.item_list,
+                parent,
+                false
+            )
+
         return ViewHolder(view)
     }
 
-    override fun getItemCount() = listsData.size
+    override fun getItemCount(): Int {
+        return listsData.size
+    }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val listStringData = listsData[position].toDisplayStrings()
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int
+    ) {
+
+        val item = listsData[position]
 
         with(holder) {
-            listName.text = listStringData["fileName"]
-            avgLearntScore.text = listStringData["score"]
-            numTerms.text = listStringData["terms"]
-            dateLastTested.text = listStringData["lastTested"]
+            listName.text = item.fileName
+            avgLearntScore.text = "${item.cachedStats?.learntScore?.toInt() ?: 0}%"
+            numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
+            dateLastTested.text = item.cachedStats?.dateLastTested ?: ""
 
-            // Highlight selected item
             if (position == 0) {
+
                 ViewCompat.setBackgroundTintList(
                     container,
-                    ContextCompat.getColorStateList(context, R.color.term_white_def_high)
+                    ContextCompat.getColorStateList(
+                        context,
+                        R.color.term_white_def_high
+                    )
                 )
 
-                // Change image to "checked" icon
-                radioImageView.setImageResource(R.drawable.radio_checked)
+                radioImageView.setImageResource(
+                    R.drawable.radio_checked
+                )
+
             } else {
+
                 ViewCompat.setBackgroundTintList(
                     container,
-                    ContextCompat.getColorStateList(context, R.color.button_gray)
+                    ContextCompat.getColorStateList(
+                        context,
+                        R.color.button_gray
+                    )
                 )
 
-                // Change image to "unchecked" icon
-                radioImageView.setImageResource(R.drawable.radio_unchecked)
+                radioImageView.setImageResource(
+                    R.drawable.radio_unchecked
+                )
             }
 
             itemView.setOnClickListener {
@@ -67,41 +108,40 @@ class ListAdapter(
         }
     }
 
-    private fun moveItemToTop(position: Int) {
-        if (position != 0) {
-            val clickedItem = listsData.removeAt(position)
-            listsData.add(0, clickedItem)
-            notifyItemMoved(position, 0)
-            notifyItemRangeChanged(0, position + 1)
+    private fun moveItemToTop(
+        position: Int
+    ) {
 
-            // Update listsData in MainActivity.kt
-            onListUpdated(listsData)
+        if (position == 0) return
 
-            // Scroll to top
-            (context as? androidx.appcompat.app.AppCompatActivity)?.let { activity ->
-                val recyclerView = activity.findViewById<RecyclerView>(R.id.list_recycler) // replace with your RecyclerView ID
-                recyclerView.scrollToPosition(0)
-            }
+        val clickedItem =
+            listsData.removeAt(position)
 
-            writeListDataToListsFile(context, listsData)
-        }
+        listsData.add(0, clickedItem)
+
+        notifyItemMoved(position, 0)
+        notifyItemRangeChanged(
+            0,
+            position + 1
+        )
+
+        onListUpdated(listsData)
+
+        (context as? AppCompatActivity)
+            ?.findViewById<RecyclerView>(
+                R.id.list_recycler
+            )
+            ?.scrollToPosition(0)
     }
 
-    fun updateRecyclerView(delete: Boolean = false) {
-        if (delete) {
-            notifyItemRemoved(0)
-        }
-        else {
-            notifyItemInserted(0)
-        }
-        notifyItemRangeChanged(0, listsData.size)
+    fun submitData(
+        newData: MutableList<VocabList>
+    ) {
+        listsData = newData
+        notifyDataSetChanged()
+    }
 
-        // Scroll to top
-        (context as? androidx.appcompat.app.AppCompatActivity)?.let { activity ->
-            val recyclerView = activity.findViewById<RecyclerView>(R.id.list_recycler) // replace with your RecyclerView ID
-            recyclerView.scrollToPosition(0)
-        }
-
-        writeListDataToListsFile(context, listsData)
+    fun getSelectedList(): VocabList? {
+        return listsData.firstOrNull()
     }
 }

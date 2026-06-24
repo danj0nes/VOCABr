@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.text.TextWatcher
-import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
@@ -20,26 +19,9 @@ import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.setPadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
 import java.io.File
-import java.time.LocalDate
-
-var weightDaysSince: Float = 1f
-var weightCorrect: Float = 1f
-var weightTested: Float = 1f
-
-var testedMaxCap: Int = 15
-var testedCapWeighting: Double = 0.9
-var latestResultsLength: Int = 10
-var daysSinceMinCap: Int = 30
-
-var desiredTermTypes: MutableList<String> = mutableListOf("verbe", "mot", "nom", "adjectif", "phrase", "other")
-var allowRepeatsAfter: Int = 15
-const val BLANK_RESULTS_STRING: String = "No Recent Results"
-
-var todayDate: LocalDate = LocalDate.now()
 
 class LearnActivity : AppCompatActivity() {
     // buttons and text views
@@ -84,12 +66,9 @@ class LearnActivity : AppCompatActivity() {
     private var quitting: Boolean = false
     private var showingTerm: Boolean = false
     private var resetFlip: Boolean = true
-
     private var waitingForCommand: Boolean = false
-
-    private var file: File? = null
-    private lateinit var fileName: String
-    private lateinit var listsData: MutableList<SavedListData>
+    private lateinit var csvFile: File
+    private lateinit var listId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // android studio defaults
@@ -105,29 +84,13 @@ class LearnActivity : AppCompatActivity() {
 
         initViews()
 
-        fileName = intent.getStringExtra("fileName") ?: run {
-            terminate()
-            return
-        }
-        weightDaysSince = intent.getFloatExtra("DAYS_SINCE", 1f)
-        weightCorrect = intent.getFloatExtra("CORRECT", 1f)
-        weightTested = intent.getFloatExtra("TESTED", 1f)
-        allowRepeatsAfter = intent.getIntExtra("DELAY_VALUE", 15)
+        val vocabListObj = AppSettings.settings.getAllLists().first()
+        csvFile = File(filesDir, vocabListObj.fileName)
+        listId = vocabListObj.id
+        val terms = loadTermDataFromCsv(csvFile).toMutableList()
 
-
-        listsData = readListData(this)
-
-        val file = File(filesDir, fileName)
-        this.file = file
-
-        // add checks!!!!!!!!!!!!!!
-        val terms = loadTermDataFromCsv(file).toMutableList()
-
-        val updatedDF = calcLearntScore(terms)
-        df = updatedDF
-        recentLength = minOf(updatedDF.size - 1, allowRepeatsAfter)
-
-        saveListData()
+        df = sortTerms(terms)
+        recentLength = minOf(terms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
 
         showTerm()
 
@@ -410,21 +373,8 @@ class LearnActivity : AppCompatActivity() {
         }
     }
 
-    private fun terminate() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
-        finish() // closes the current activity so user cannot use back
-    }
-
     private fun saveFile(verbose: Boolean = false){
-        val tempFile: File = file ?: run {
-            Toast.makeText(this, "Saving Error.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        saveTermDataToCsv(df, tempFile)
-        saveListData()
-
-
+        saveTermDataToCsv(df, csvFile)
         if (verbose) {
             Toast.makeText(this, "Saved Successfully.", Toast.LENGTH_SHORT).show()
         }
@@ -438,7 +388,10 @@ class LearnActivity : AppCompatActivity() {
             terminating = true
         )
         saveFile()
-        terminate()
+        calculateList(listId, df)
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish() // closes the current activity so user cannot use back
     }
 
     private fun hideKeyboard(view: View) {
@@ -537,31 +490,6 @@ class LearnActivity : AppCompatActivity() {
         animate().alpha(0f).setDuration(duration)
             .withEndAction { visibility = View.GONE }
             .start()
-    }
-
-    private fun saveListData() {
-        // 1. Calculate average learnt score
-        val avgLearntScore = if (df.isNotEmpty()) {
-            df.map { it.learntScore }.average().toFloat()
-        } else 0f
-
-        // 3. Create a new SavedListData object
-        val newSavedData = SavedListData(
-            fileName = fileName,
-            numTerms= df.size,
-            avgLearntScore = avgLearntScore,
-            dateLastTested = todayDate  // today's date
-        )
-
-        // 4. Replace the first item or add if empty
-        if (listsData.isNotEmpty()) {
-            listsData[0] = newSavedData
-        } else {
-            listsData.add(newSavedData)
-        }
-
-        // 5. Write the updated list back to file
-        writeListDataToListsFile(this, listsData)
     }
 
     private fun initViews() {

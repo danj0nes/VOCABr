@@ -1,6 +1,5 @@
 package com.danjonesapps.vocabr
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -44,7 +43,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         // -------------------------
-        // 1. Find views
+        // Find views
         // -------------------------
         daysSinceSlider = findViewById(R.id.settings_days_since_slider)
         correctSlider = findViewById(R.id.settings_correct_slider)
@@ -62,23 +61,15 @@ class SettingsActivity : AppCompatActivity() {
 
         returnButton = findViewById(R.id.settings_return_button)
 
-        // -------------------------
-        // 2. Receive current values from MainActivity
-        // -------------------------
-        val daysSince = intent.getFloatExtra("DAYS_SINCE", 1f)
-        val correct = intent.getFloatExtra("CORRECT", 1f)
-        val tested = intent.getFloatExtra("TESTED", 1f)
-        val topNSelected = intent.getBooleanExtra("TOP_N_SELECTED", false)
-        topNValue = intent.getIntExtra("TOP_N_VALUE", 26)
-        delayValue = intent.getIntExtra("DELAY_VALUE", 15)
-
         // Set initial slider values
-        daysSinceSlider.value = daysSince
-        correctSlider.value = correct
-        testedSlider.value = tested
+        daysSinceSlider.value = AppSettings.settings.getWeightDaysSince().toFloat()
+        correctSlider.value = AppSettings.settings.getWeightCorrect().toFloat()
+        testedSlider.value = AppSettings.settings.getWeightTested().toFloat()
+        topNValue = AppSettings.settings.getCurrentTopN()
+        delayValue = AppSettings.settings.getAllowRepeatsAfter()
 
         // Set radio button & Top N input
-        if (topNSelected) {
+        if (AppSettings.settings.getIsTopNSelected()) {
             radioTopN.isChecked = true
             topNInputLayout.isEnabled = true
             topNEditText.setText(topNValue.toString())
@@ -92,7 +83,7 @@ class SettingsActivity : AppCompatActivity() {
         delayEditText.setText(delayValue.toString())
 
         // -------------------------
-        // 3. Enable/disable Top N input based on radio selection
+        // Enable/disable Top N input based on radio selection
         // -------------------------
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
             if (checkedId == radioTopN.id) {
@@ -110,24 +101,14 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // -------------------------
-        // 4. Return button: pass updated values back
-        // -------------------------
         returnButton.setOnClickListener {
-            val intent = Intent().apply {
-                putExtra("DAYS_SINCE", daysSinceSlider.value)
-                putExtra("CORRECT", correctSlider.value)
-                putExtra("TESTED", testedSlider.value)
-                putExtra("TOP_N_SELECTED", radioTopN.isChecked)
-
-                val nValue = topNEditText.text.toString().toIntOrNull() ?: topNValue
-                putExtra("TOP_N_VALUE", nValue)
-
-                val delayValue = delayEditText.text.toString().toIntOrNull() ?: delayValue
-                putExtra("DELAY_VALUE", delayValue)
-            }
-            setResult(Activity.RESULT_OK, intent)
-            finish()
+            AppSettings.settings.setCurrentTopN(topNEditText.text.toString().toIntOrNull()
+                ?: topNValue)
+            AppSettings.settings.setAllowRepeatsAfter(delayEditText.text.toString().toIntOrNull()
+                ?: delayValue)
+            recalculateAllLists(this)
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
         }
     }
 }

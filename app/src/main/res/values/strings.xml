@@ -32,4 +32,6 @@
     <string name="definition_text_default">I eat apples</string>
     <string name="settings_learn_delay_text">Term Repeat Delay</string>
     <string name="settings_learn_delay_hint">Delay</string>
+    <string name="settings_list_list_number_title">List Numbers</string>
+    <string name="settings_list_show_term_title">Show term first</string>
 </resources>

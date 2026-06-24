@@ -45,7 +45,8 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingBottom="10dp">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/list_header_card"
@@ -72,12 +73,12 @@
                         app:layout_constraintStart_toStartOf="parent" />
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Export Rows Title -->
+                <!-- List Number Title -->
                 <TextView
-                    android:id="@+id/settings_list_rows_title"
+                    android:id="@+id/settings_list_list_number_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="list settings"
+                    android:text="@string/settings_list_list_number_title"
                     android:textColor="@color/term_white_def"
                     android:fontFamily="@font/cascadia_mono"
                     android:textStyle="bold"
@@ -86,6 +87,91 @@
                     android:layout_marginTop="5dp"
                     app:layout_constraintTop_toBottomOf="@id/list_header_card"
                     app:layout_constraintStart_toStartOf="parent" />
+
+                <!-- List Number Slider -->
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/settings_list_number_slider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:valueFrom="5"
+                    android:valueTo="15"
+                    app:trackHeight="6dp"
+                    app:thumbRadius="12dp"
+                    app:thumbElevation="0dp"
+                    android:paddingVertical="5dp"
+                    app:haloColor="@color/card_gray"
+                    app:trackColor="@color/term_white_def"
+                    app:trackColorInactive="@color/term_white_def"
+                    android:layout_marginHorizontal="10dp"
+                    app:labelBehavior="gone"
+                    app:thumbColor="@color/term_white_def_high"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_list_number_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- Show Term Title -->
+                <TextView
+                    android:id="@+id/settings_list_show_term_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_list_show_term_title"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_number_slider"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <!-- Show Term Switch -->
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settings_list_show_term_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    app:thumbTint="@color/term_white_def_high"
+                    app:trackTint="@color/term_white_def"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_show_term_title"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
+                <!-- Show Term Types -->
+                <TextView
+                    android:id="@+id/settings_list_term_type_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Term Types"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_show_term_switch"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/settings_list_term_type_dropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="15dp"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_term_type_title"
+                    app:layout_constraintStart_toStartOf="parent">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/settings_list_term_type_field"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:textSize="15dp"
+                        android:fontFamily="@font/cascadia_mono"
+                        android:textStyle="bold"
+                        android:hint="Select Term Types"
+                        android:focusable="false"
+                        android:clickable="true"
+                        android:inputType="none"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
