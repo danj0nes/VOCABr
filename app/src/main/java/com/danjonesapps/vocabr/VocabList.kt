@@ -7,97 +7,103 @@ import java.time.LocalDate
 data class VocabList(
     val id: String,
     val fileName: String,
-    val termTypes: List<String>,
-    val minListNumber: Int,
-    val maxListNumber: Int,
+    var termTypes: List<String>,
+    var minListNumber: Int,
+    var maxListNumber: Int,
     var cachedStats: VocabListStats? = null
 )
 
 data class TermData(
     @CsvBindByName(column = "UNIQUE_ID")
     var uniqueId: Int = 1, // IS ALWAYS RE-INDEXED ON LOAD
-    @CsvBindByName(column = "LEARNT_SCORE")
-    private var learntScore: Float = 0f,
-    @CsvBindByName(column = "REV_LEARNT_SCORE")
-    private var revLearntScore: Float = 0f,
+    @CsvBindByName(column = "TERM_LEARNT_SCORE")
+    private var termLearntScore: Float = 0f,
+    @CsvBindByName(column = "DEF_LEARNT_SCORE")
+    private var defLearntScore: Float = 0f,
     @CsvBindByName(column = "TERM")
-    var term: String = "term",
+    private var term: String = "term",
     @CsvBindByName(column = "DEFINITION")
-    var definition: String = "definition",
+    private var definition: String = "definition",
     @CsvBindByName(column = "LIST_NUMBER")
     var listNumber: Int = -1, // GETS REWRITTEN ON LOAD IF MISSING
     @CsvBindByName(column = "TERM_TYPE")
     var termType: String = "term_type",
-    @CsvBindByName(column = "DATE_LAST_TESTED")
+    @CsvBindByName(column = "TERM_DATE_LAST_TESTED")
     @CsvDate("yyyy-MM-dd")
-    private var dateLastTested: LocalDate? = null,
-    @CsvBindByName(column = "REV_DATE_LAST_TESTED")
+    private var termDateLastTested: LocalDate? = null,
+    @CsvBindByName(column = "DEF_DATE_LAST_TESTED")
     @CsvDate("yyyy-MM-dd")
-    private var revDateLastTested: LocalDate? = null,
-    @CsvBindByName(column = "LATEST_RESULTS")
-    private var latestResults: String = "No Recent Results",
-    @CsvBindByName(column = "REV_LATEST_RESULTS")
-    private var revLatestResults: String = "No Recent Results",
-    @CsvBindByName(column = "TESTED_COUNT")
-    private var testedCount: Int = 0,
-    @CsvBindByName(column = "REV_TESTED_COUNT")
-    private var revTestedCount: Int = 0,
+    private var defDateLastTested: LocalDate? = null,
+    @CsvBindByName(column = "TERM_LATEST_RESULTS")
+    private var termLatestResults: String = "No Recent Results",
+    @CsvBindByName(column = "DEF_LATEST_RESULTS")
+    private var defLatestResults: String = "No Recent Results",
+    @CsvBindByName(column = "TERM_TESTED_COUNT")
+    private var termTestedCount: Int = 0,
+    @CsvBindByName(column = "DEF_TESTED_COUNT")
+    private var defTestedCount: Int = 0,
     @CsvBindByName(column = "EXAMPLE_1")
     var exampleOne: String? = null,
     @CsvBindByName(column = "EXAMPLE_2")
     var exampleTwo: String? = null,
     @CsvBindByName(column = "EXAMPLE_3")
     var exampleThree: String? = null,
-    @CsvBindByName(column = "EXAMPLE_DEF_1")
-    var exampleDefOne: String? = null,
-    @CsvBindByName(column = "EXAMPLE_DEF_2")
-    var exampleDefTwo: String? = null,
-    @CsvBindByName(column = "EXAMPLE_DEF_3")
-    var exampleDefThree: String? = null,
+    @CsvBindByName(column = "EXAMPLE_1_DEF")
+    var exampleOneDef: String? = null,
+    @CsvBindByName(column = "EXAMPLE_2_DEF")
+    var exampleTwoDef: String? = null,
+    @CsvBindByName(column = "EXAMPLE_3_DEF")
+    var exampleThreeDef: String? = null,
     @CsvBindByName(column = "IPA")
     var ipa: String? = null,
 ) {
-    fun learntScore(reverse: Boolean): Float =
-        if (reverse) revLearntScore else learntScore
+    fun learntScore(termFirst: Boolean): Float =
+        if (termFirst) termLearntScore else defLearntScore
 
-    fun setLearntScore(reverse: Boolean, value: Float) {
-        if (reverse) {
-            revLearntScore = value
+    fun setLearntScore(termFirst: Boolean, value: Float) {
+        if (termFirst) {
+            termLearntScore = value
         } else {
-            learntScore = value
+            defLearntScore = value
         }
     }
 
-    fun dateLastTested(reverse: Boolean): LocalDate? =
-        if (reverse) revDateLastTested else dateLastTested
+    fun dateLastTested(termFirst: Boolean): LocalDate? =
+        if (termFirst) termDateLastTested else defDateLastTested
 
-    fun setDateLastTested(reverse: Boolean, value: LocalDate?) {
-        if (reverse) {
-            revDateLastTested = value
+    fun setDateLastTested(termFirst: Boolean, value: LocalDate?) {
+        if (termFirst) {
+            termDateLastTested = value
         } else {
-            dateLastTested = value
+            defDateLastTested = value
         }
     }
 
-    fun latestResults(reverse: Boolean): String =
-        if (reverse) revLatestResults else latestResults
+    fun latestResults(termFirst: Boolean): String =
+        if (termFirst) termLatestResults else defLatestResults
 
-    fun setLatestResults(reverse: Boolean, value: String) {
-        if (reverse) {
-            revLatestResults = value
+    fun setLatestResults(termFirst: Boolean, value: String) {
+        if (termFirst) {
+            termLatestResults = value
         } else {
-            latestResults = value
+            defLatestResults = value
         }
     }
 
-    fun testedCount(reverse: Boolean): Int =
-        if (reverse) revTestedCount else testedCount
+    fun testedCount(termFirst: Boolean): Int =
+        if (termFirst) termTestedCount else defTestedCount
 
-    fun setTestedCount(reverse: Boolean, value: Int) {
-        if (reverse) {
-            revTestedCount = value
+    fun setTestedCount(termFirst: Boolean, value: Int) {
+        if (termFirst) {
+            termTestedCount = value
         } else {
-            testedCount = value
+            defTestedCount = value
         }
     }
+
+    fun vocab(termFirst: Boolean): String =
+        if (termFirst) term else definition
+
+    fun vocabDef(termFirst: Boolean): String =
+        if (termFirst) definition else term
 }

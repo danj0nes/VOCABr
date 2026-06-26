@@ -2,7 +2,9 @@ package com.danjonesapps.vocabr
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.MultiAutoCompleteTextView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.core.view.ViewCompat
@@ -12,11 +14,17 @@ import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.slider.RangeSlider
 
 class SettingsActivity : AppCompatActivity() {
+    private lateinit var listNumberSlider: RangeSlider
+    private lateinit var termTypesAuto: MultiAutoCompleteTextView
+
     private lateinit var daysSinceSlider: Slider
     private lateinit var correctSlider: Slider
     private lateinit var testedSlider: Slider
+    private lateinit var showTermSwitch: MaterialSwitch
     private lateinit var delayInputLayout: TextInputLayout
     private lateinit var delayEditText: TextInputEditText
 
@@ -45,10 +53,13 @@ class SettingsActivity : AppCompatActivity() {
         // -------------------------
         // Find views
         // -------------------------
+        listNumberSlider = findViewById(R.id.settings_list_number_slider)
+        termTypesAuto = findViewById<MultiAutoCompleteTextView>(R.id.settings_list_term_type_field)
+
         daysSinceSlider = findViewById(R.id.settings_days_since_slider)
         correctSlider = findViewById(R.id.settings_correct_slider)
         testedSlider = findViewById(R.id.settings_tested_slider)
-
+        showTermSwitch = findViewById(R.id.settings_list_show_term_switch)
         delayInputLayout = findViewById(R.id.settings_delay_input)
         delayEditText = findViewById(R.id.delayEditText)
 
@@ -61,10 +72,23 @@ class SettingsActivity : AppCompatActivity() {
 
         returnButton = findViewById(R.id.settings_return_button)
 
+        // Set List controls
+        val allLists = AppSettings.settings.getAllLists()
+        val vocabList = allLists.first()
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_dropdown_item_1line,
+            vocabList.termTypes
+        )
+        termTypesAuto.setAdapter(adapter)
+        termTypesAuto.threshold = 1
+        termTypesAuto.setTokenizer(MultiAutoCompleteTextView.CommaTokenizer())
+
         // Set initial slider values
         daysSinceSlider.value = AppSettings.settings.getWeightDaysSince().toFloat()
         correctSlider.value = AppSettings.settings.getWeightCorrect().toFloat()
         testedSlider.value = AppSettings.settings.getWeightTested().toFloat()
+        showTermSwitch.isChecked = AppSettings.settings.getShowTermFirst()
         topNValue = AppSettings.settings.getCurrentTopN()
         delayValue = AppSettings.settings.getAllowRepeatsAfter()
 
@@ -102,10 +126,24 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         returnButton.setOnClickListener {
-            AppSettings.settings.setCurrentTopN(topNEditText.text.toString().toIntOrNull()
-                ?: topNValue)
-            AppSettings.settings.setAllowRepeatsAfter(delayEditText.text.toString().toIntOrNull()
-                ?: delayValue)
+            vocabList.termTypes = termTypesAuto.text.toString()
+                .split(",")
+                .map { it.trim() }
+                .filter {
+                    it.isNotEmpty() && it in (vocabList.cachedStats?.allTermTypes
+                        ?: listOf())
+                }
+                .distinct()
+            AppSettings.settings.setSettings(
+                allLists,
+                daysSinceSlider.value.toDouble(),
+                correctSlider.value.toDouble(),
+                testedSlider.value.toDouble(),
+                delayEditText.text.toString().toIntOrNull() ?: delayValue,
+                showTermSwitch.isChecked,
+                radioTopN.isChecked,
+                topNEditText.text.toString().toIntOrNull() ?: topNValue
+            )
             recalculateAllLists(this)
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)

@@ -6,4 +6,5 @@ data class VocabListStats(
     val learntScore: Double, // overall non filtered combined with rev
     val filteredLearntScore: Double, // filtered combined with rev
     val dateLastTested: String, // overall non filtered
+    val allTermTypes: List<String>,
 )

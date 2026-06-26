@@ -101,12 +101,13 @@ class MainActivity : AppCompatActivity() {
                     }
 
             AppSettings.settings.setLists(updatedLists)
+
             adapter.submitData(updatedLists.toMutableList())
         }
 
         exportButton.setOnClickListener {
             if (AppSettings.settings.getAllLists().isNotEmpty()) {
-                saveFileToDownloads(fileName = AppSettings.settings.getAllLists().first().fileName)
+                saveFileToDownloads(fileName = AppSettings.settings.getFirstList().fileName)
             }
             else {
                 Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
@@ -154,7 +155,7 @@ class MainActivity : AppCompatActivity() {
             updatedLists.add(0, newList)
             AppSettings.settings.setLists(updatedLists)
 
-            adapter.submitData(AppSettings.settings.getAllLists())
+            adapter.submitData(updatedLists)
 
             Toast.makeText(
                 this,

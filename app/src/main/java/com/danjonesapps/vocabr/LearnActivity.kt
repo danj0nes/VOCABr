@@ -54,7 +54,8 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var dimOverlay: View
 
     //other vars and vals
-    private var df: MutableList<TermData> = mutableListOf()
+    private var terms: MutableList<TermData> = mutableListOf()
+    private var filteredTerms: MutableList<TermData> = mutableListOf()
     private var recent: MutableList<Triple<Int, Boolean, Boolean>> = mutableListOf()
     private var futureTerms: MutableList<Pair<Int, Boolean>> = mutableListOf()
     private var repeatIncorrectIds: MutableList<Pair<Int, Int>> = mutableListOf()
@@ -64,11 +65,12 @@ class LearnActivity : AppCompatActivity() {
     private var recentLength: Int = 0
     private var reversing: Boolean = false
     private var quitting: Boolean = false
-    private var showingTerm: Boolean = false
+    private var flipped: Boolean = true
     private var resetFlip: Boolean = true
     private var waitingForCommand: Boolean = false
     private lateinit var csvFile: File
     private lateinit var listId: String
+    private var showTermFirst: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // android studio defaults
@@ -84,13 +86,18 @@ class LearnActivity : AppCompatActivity() {
 
         initViews()
 
-        val vocabListObj = AppSettings.settings.getAllLists().first()
+        val vocabListObj = AppSettings.settings.getFirstList()
         csvFile = File(filesDir, vocabListObj.fileName)
         listId = vocabListObj.id
-        val terms = loadTermDataFromCsv(csvFile).toMutableList()
+        showTermFirst = AppSettings.settings.getShowTermFirst()
+        terms = loadTermDataFromCsv(csvFile).toMutableList()
 
-        df = sortTerms(terms)
-        recentLength = minOf(terms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
+        filteredTerms = terms.filter {
+            it.listNumber in vocabListObj.minListNumber..vocabListObj.maxListNumber &&
+                    it.termType in vocabListObj.termTypes
+        }.toMutableList()
+        sortTerms(filteredTerms)
+        recentLength = minOf(filteredTerms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
 
         showTerm()
 
@@ -102,34 +109,7 @@ class LearnActivity : AppCompatActivity() {
         setupSearch()
     }
 
-    private fun showTerm(){
-        val quad = getTop(df, recent, repeatIncorrectIds, futureTerms, reversing, quitting)
-        recent = quad.recent
-        futureTerms = quad.futureTerms
-        repeatIncorrectIds = quad.repeatIncorrectIds
-
-        val topTerm: SelectedTerm = quad.selectedTerm ?: run {
-            saveAndTerminate()
-            return
-        }
-        selectedTerm = topTerm
-
-        reversing = false
-
-        // SET LEARNT SCORE
-        //learntScoreTextView.text = "learnt score: ${String.format("%.1f%%", topTerm.learntScore * 100f)}"
-
-        // SET TERM TYPE
-        termTypeTextView.text = topTerm.termType
-
-        // ENSURE TERM IS SHOWN IF NEW TERM
-        if (resetFlip) {
-            showingTerm = true
-        }
-        else {
-            resetFlip = true
-        }
-
+    private fun setCard(topTerm: SelectedTerm){
         // SET TERM
         if (topTerm.repeatIncorrect) {
             termTextView.setTextColor(getColor(R.color.quitting_yellow))
@@ -139,27 +119,31 @@ class LearnActivity : AppCompatActivity() {
             termTextView.setTextColor(getColor(R.color.term_white))
             termSubTextView.setTextColor(getColor(R.color.term_white_def))
         }
-        if (showingTerm) {
-            termTextView.text = topTerm.term
-            if (topTerm.ipa.isNullOrEmpty()) {
+        if (!flipped) {
+            termTextView.text = topTerm.termData.vocab(showTermFirst)
+            if (topTerm.termData.ipa.isNullOrEmpty() || !showTermFirst) {
                 termSubTextView.visibility = View.GONE
             } else {
-                termSubTextView.text = topTerm.ipa
+                termSubTextView.text = topTerm.termData.ipa
                 termSubTextView.visibility = View.VISIBLE
             }
             examplesCard.visibility = View.GONE
         }
         else {
-            termTextView.text = topTerm.definition
-            termSubTextView.text = topTerm.term
+            termTextView.text = topTerm.termData.vocabDef(showTermFirst)
+            if (topTerm.termData.ipa.isNullOrEmpty() || showTermFirst) {
+                termSubTextView.text = topTerm.termData.vocab((showTermFirst))
+            } else {
+                termSubTextView.text = topTerm.termData.ipa
+            }
             termSubTextView.visibility = View.VISIBLE
             examplesCard.visibility = View.VISIBLE
 
             // SET EXAMPLES
             val examples = listOf(
-                Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
-                Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
-                Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
+                Triple(topTerm.termData.exampleOne, topTerm.termData.exampleOneDef, Pair(exampleOneTextView, exampleOneDefTextView)),
+                Triple(topTerm.termData.exampleTwo, topTerm.termData.exampleTwoDef, Pair(exampleTwoTextView, exampleTwoDefTextView)),
+                Triple(topTerm.termData.exampleThree, topTerm.termData.exampleThreeDef, Pair(exampleThreeTextView, exampleThreeDefTextView))
             )
             val hasNoExamples = examples.all { it.first.isNullOrEmpty() || it.second.isNullOrEmpty() }
 
@@ -188,6 +172,37 @@ class LearnActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showTerm(){
+        val quad = getTop(filteredTerms, recent, repeatIncorrectIds, futureTerms, reversing, quitting)
+        recent = quad.recent
+        futureTerms = quad.futureTerms
+        repeatIncorrectIds = quad.repeatIncorrectIds
+
+        val topTerm: SelectedTerm = quad.selectedTerm ?: run {
+            saveAndTerminate()
+            return
+        }
+        selectedTerm = topTerm
+
+        reversing = false
+
+        // SET LEARNT SCORE
+        //learntScoreTextView.text = "learnt score: ${String.format("%.1f%%", topTerm.learntScore * 100f)}"
+
+        // SET TERM TYPE
+        termTypeTextView.text = topTerm.termData.termType
+
+        // ENSURE TERM IS SHOWN IF NEW TERM
+        if (resetFlip) {
+            flipped = false
+        }
+        else {
+            resetFlip = true
+        }
+
+        setCard(topTerm)
 
         // SET QUITTING
         if (quitting) {
@@ -213,10 +228,11 @@ class LearnActivity : AppCompatActivity() {
                 quitting = true
 
                 // adds all incorrect terms to repeat_incorrect
-                df = saveResult(
-                    df = df,
+                saveResult(
+                    filteredTerms = filteredTerms,
                     recent = recent,
-                    repeatIncorrectIds = repeatIncorrectIds
+                    repeatIncorrectIds = repeatIncorrectIds,
+                    showTermFirst = showTermFirst
                 )
 
                 // keep only repeat incorrect terms of future_terms
@@ -224,7 +240,7 @@ class LearnActivity : AppCompatActivity() {
 
                 // ensure than term on screen is chosen again
                 if (topTerm.repeatIncorrect) {
-                    futureTerms.add(0, Pair(topTerm.id, true))
+                    futureTerms.add(0, Pair(topTerm.termData.uniqueId, true))
                     resetFlip = false
                 }
 
@@ -235,7 +251,7 @@ class LearnActivity : AppCompatActivity() {
             else { // TERMINATE
                 // ensure that term on screen if gotten wrong is saved as gotten wrong
                 if (topTerm.repeatIncorrect) {
-                    repeatIncorrectIds.add(0, Pair(topTerm.id, 0))
+                    repeatIncorrectIds.add(0, Pair(topTerm.termData.uniqueId, 0))
                 }
 
                 // add all repeat incorrect terms in future_terms to repeat_incorrect_ids
@@ -248,16 +264,17 @@ class LearnActivity : AppCompatActivity() {
             }
         }
         else if (buttonCommand == ButtonCommand.SAVE) {
-            df = saveResult(
-                df = df,
+            saveResult(
+                filteredTerms = filteredTerms,
                 recent = recent,
                 repeatIncorrectIds = repeatIncorrectIds,
+                showTermFirst = showTermFirst,
                 recentGap = (recentLength - recent.size)
             )
             saveFile(verbose = true)
 
             // ensure than term on screen is chosen again
-            futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
+            futureTerms.add(0, Pair(topTerm.termData.uniqueId, topTerm.repeatIncorrect))
 
             recent.clear()
             correct = 0
@@ -273,7 +290,7 @@ class LearnActivity : AppCompatActivity() {
                         incorrect--
                     }
                 }
-                futureTerms.add(0, Pair(topTerm.id, topTerm.repeatIncorrect))
+                futureTerms.add(0, Pair(topTerm.termData.uniqueId, topTerm.repeatIncorrect))
                 reversing = true
             }
             else {
@@ -282,79 +299,22 @@ class LearnActivity : AppCompatActivity() {
             }
         }
         else if (buttonCommand == ButtonCommand.NOT) {
-            recent.add(Triple(topTerm.id, false, topTerm.repeatIncorrect))
+            recent.add(Triple(topTerm.termData.uniqueId, false, topTerm.repeatIncorrect))
             if (!topTerm.repeatIncorrect) {
                 incorrect++
             }
             continueToNext()
         }
         else if (buttonCommand == ButtonCommand.GOT) {
-            recent.add(Triple(topTerm.id, true, topTerm.repeatIncorrect))
+            recent.add(Triple(topTerm.termData.uniqueId, true, topTerm.repeatIncorrect))
             if (!topTerm.repeatIncorrect) {
                 correct++
             }
             continueToNext()
         }
         else if (buttonCommand == ButtonCommand.SHOW) {
-            showingTerm = !showingTerm
-            if (topTerm.repeatIncorrect) {
-                termTextView.setTextColor(getColor(R.color.quitting_yellow))
-                termSubTextView.setTextColor(getColor(R.color.quitting_yellow_def))
-            }
-            else {
-                termTextView.setTextColor(getColor(R.color.term_white))
-                termSubTextView.setTextColor(getColor(R.color.term_white_def))
-            }
-            if (showingTerm) {
-                termTextView.text = topTerm.term
-                if (topTerm.ipa.isNullOrEmpty()) {
-                    termSubTextView.visibility = View.GONE
-                } else {
-                    termSubTextView.text = topTerm.ipa
-                    termSubTextView.visibility = View.VISIBLE
-                }
-                examplesCard.visibility = View.GONE
-            }
-            else {
-                termTextView.text = topTerm.definition
-                termSubTextView.text = topTerm.term
-                termSubTextView.visibility = View.VISIBLE
-                examplesCard.visibility = View.VISIBLE
-
-                // SET EXAMPLES
-                val examples = listOf(
-                    Triple(topTerm.exampleOne, topTerm.exampleDefOne, Pair(exampleOneTextView, exampleOneDefTextView)),
-                    Triple(topTerm.exampleTwo, topTerm.exampleDefTwo, Pair(exampleTwoTextView, exampleTwoDefTextView)),
-                    Triple(topTerm.exampleThree, topTerm.exampleDefThree, Pair(exampleThreeTextView, exampleThreeDefTextView))
-                )
-                val hasNoExamples = examples.all { it.first.isNullOrEmpty() || it.second.isNullOrEmpty() }
-
-                if (hasNoExamples) {
-                    examplesHintTextView.visibility = View.VISIBLE
-                    examples.forEach { (_, _, views) ->
-                        views.first.visibility = View.GONE
-                        views.second.visibility = View.GONE
-                    }
-                } else {
-                    examplesHintTextView.visibility = View.GONE
-                    examples.forEach { (example, def, views) ->
-                        if (!example.isNullOrEmpty() && !def.isNullOrEmpty()) {
-                            views.first.apply {
-                                text = example
-                                visibility = View.VISIBLE
-                            }
-                            views.second.apply {
-                                text = def
-                                visibility = View.VISIBLE
-                            }
-                        } else {
-                            views.first.visibility = View.GONE
-                            views.second.visibility = View.GONE
-                        }
-                    }
-                }
-            }
-
+            flipped = !flipped
+            setCard(topTerm)
             waitingForCommand = true
             return
         }
@@ -363,32 +323,34 @@ class LearnActivity : AppCompatActivity() {
 
     private fun continueToNext(){
         if (recent.size > recentLength) {
-            df = saveResult(df, mutableListOf(recent[0]), repeatIncorrectIds)
+            saveResult(filteredTerms, mutableListOf(recent[0]), repeatIncorrectIds, showTermFirst)
             recent.removeAt(0)
         } else if (quitting && futureTerms.isEmpty()) {
             while (repeatIncorrectIds.isEmpty() && recent.isNotEmpty()) {
-                df = saveResult(df, mutableListOf(recent[0]), repeatIncorrectIds)
+                saveResult(filteredTerms, mutableListOf(recent[0]), repeatIncorrectIds, showTermFirst)
                 recent.removeAt(0)
             }
         }
     }
 
     private fun saveFile(verbose: Boolean = false){
-        saveTermDataToCsv(df, csvFile)
+        sortTerms(terms, showTermFirst)
+        saveTermDataToCsv(terms, csvFile)
         if (verbose) {
             Toast.makeText(this, "Saved Successfully.", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun saveAndTerminate() {
-        df = saveResult(
-            df = df,
+        saveResult(
+            filteredTerms = filteredTerms,
             recent = recent,
             repeatIncorrectIds = repeatIncorrectIds,
+            showTermFirst = showTermFirst,
             terminating = true
         )
         saveFile()
-        calculateList(listId, df)
+        calculateList(listId, filteredTerms)
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish() // closes the current activity so user cannot use back
@@ -415,13 +377,13 @@ class LearnActivity : AppCompatActivity() {
 
                 val searchQuery = query.lowercase()
 
-                val filteredList = df.filter {
-                    (it.definition.lowercase().contains(searchQuery) ||
-                            it.term.lowercase().contains(searchQuery)) &&
-                            it.uniqueId != selectedTerm?.id
+                val filteredList = filteredTerms.filter {
+                    (it.vocabDef(true).lowercase().contains(searchQuery) ||
+                            it.vocab(true).lowercase().contains(searchQuery)) &&
+                            it.uniqueId != selectedTerm?.termData?.uniqueId
                 }.sortedWith(compareByDescending {
                     // Prioritize items where term or definition starts with the query
-                    it.definition.lowercase().startsWith(searchQuery) || it.term.lowercase().startsWith(searchQuery)
+                    it.vocabDef(true).lowercase().startsWith(searchQuery) || it.vocab(true).lowercase().startsWith(searchQuery)
                 }).take(20)
 
                 adapter.updateList(filteredList, searchQuery)

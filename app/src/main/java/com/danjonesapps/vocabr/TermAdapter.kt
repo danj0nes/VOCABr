@@ -34,8 +34,8 @@ class TermAdapter(
         val highlightColorTerm = ContextCompat.getColor(holder.itemView.context, R.color.term_white_high)
         val highlightColorDef = ContextCompat.getColor(holder.itemView.context, R.color.term_white_def_high)
 
-        holder.termText.text = highlightTextColor(termData.term, currentQuery, highlightColorTerm)
-        holder.definitionText.text = highlightTextColor(termData.definition, currentQuery, highlightColorDef)
+        holder.termText.text = highlightTextColor(termData.vocab(true), currentQuery, highlightColorTerm)
+        holder.definitionText.text = highlightTextColor(termData.vocabDef(true), currentQuery, highlightColorDef)
     }
 
     override fun getItemCount() = terms.size

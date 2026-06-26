@@ -21,24 +21,12 @@ class ListAdapter(
     inner class ViewHolder(
         itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
-
-        val listName: TextView =
-            itemView.findViewById(R.id.listFileName)
-
-        val avgLearntScore: TextView =
-            itemView.findViewById(R.id.avgLearntScore)
-
-        val numTerms: TextView =
-            itemView.findViewById(R.id.numTerms)
-
-        val dateLastTested: TextView =
-            itemView.findViewById(R.id.dateLastTested)
-
-        val radioImageView: ImageView =
-            itemView.findViewById(R.id.radio_button)
-
-        val container: ConstraintLayout =
-            itemView.findViewById(R.id.item_container)
+        val listName: TextView = itemView.findViewById(R.id.listFileName)
+        val avgLearntScore: TextView = itemView.findViewById(R.id.avgLearntScore)
+        val numTerms: TextView = itemView.findViewById(R.id.numTerms)
+        val dateLastTested: TextView = itemView.findViewById(R.id.dateLastTested)
+        val radioImageView: ImageView = itemView.findViewById(R.id.radio_button)
+        val container: ConstraintLayout = itemView.findViewById(R.id.item_container)
     }
 
     override fun onCreateViewHolder(
@@ -64,13 +52,12 @@ class ListAdapter(
         holder: ViewHolder,
         position: Int
     ) {
-
         val item = listsData[position]
 
         with(holder) {
-            listName.text = item.fileName
-            avgLearntScore.text = "${item.cachedStats?.learntScore?.toInt() ?: 0}%"
-            numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
+            listName.text = item.fileName.substringBeforeLast(".")
+            avgLearntScore.text = "${item.cachedStats?.learntScore?.toInt() ?: 0}% (${item.cachedStats?.filteredLearntScore?.toInt() ?: 0}%)"
+            numTerms.text = "${item.cachedStats?.numTerms ?: 0} (${item.cachedStats?.filteredNumTerms ?: 0}) terms"
             dateLastTested.text = item.cachedStats?.dateLastTested ?: ""
 
             if (position == 0) {
@@ -111,11 +98,9 @@ class ListAdapter(
     private fun moveItemToTop(
         position: Int
     ) {
-
         if (position == 0) return
 
-        val clickedItem =
-            listsData.removeAt(position)
+        val clickedItem = listsData.removeAt(position)
 
         listsData.add(0, clickedItem)
 

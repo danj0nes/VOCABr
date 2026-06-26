@@ -63,44 +63,35 @@ class SettingsManager(context: Context) {
     // ==================
 
     fun getWeightDaysSince() = settings.optDouble("weightDaysSince", 1.0)
-    fun setWeightDaysSince(value: Double) {
-        settings.put("weightDaysSince", value)
-        save()
-    }
-
     fun getWeightCorrect() = settings.optDouble("weightCorrect", 1.0)
-    fun setWeightCorrect(value: Double) {
-        settings.put("weightCorrect", value)
-        save()
-    }
-
     fun getWeightTested() = settings.optDouble("weightTested", 1.0)
-    fun setWeightTested(value: Double) {
-        settings.put("weightTested", value)
-        save()
-    }
-
     fun getAllowRepeatsAfter() = settings.optInt("allowRepeatsAfter", 15)
-    fun setAllowRepeatsAfter(value: Int) {
-        settings.put("allowRepeatsAfter", value)
-        save()
-    }
-
     fun getShowTermFirst() = settings.optBoolean("showTermFirst", true)
-    fun setShowTermFirst(value: Boolean) {
-        settings.put("showTermFirst", value)
-        save()
-    }
-
     fun getIsTopNSelected() = settings.optBoolean("isTopNSelected", false)
-    fun setIsTopNSelected(value: Boolean) {
-        settings.put("isTopNSelected", value)
-        save()
-    }
-
     fun getCurrentTopN() = settings.optInt("currentTopN", 20)
-    fun setCurrentTopN(value: Int) {
-        settings.put("currentTopN", value)
+
+    fun setSettings(
+        lists: List<VocabList>,
+        weightDaysSince: Double,
+        weightCorrect: Double,
+        weightTested: Double,
+        allowRepeatsAfter: Int,
+        showTermFirst: Boolean,
+        isTopNSelected: Boolean,
+        currentTopN: Int,
+    ) {
+        val array = JSONArray()
+        lists.forEach { list ->
+            array.put(list.toJson())
+        }
+        settings.put("lists", array)
+        settings.put("weightDaysSince", weightDaysSince)
+        settings.put("weightCorrect", weightCorrect)
+        settings.put("weightTested", weightTested)
+        settings.put("allowRepeatsAfter", allowRepeatsAfter)
+        settings.put("showTermFirst", showTermFirst)
+        settings.put("isTopNSelected", isTopNSelected)
+        settings.put("currentTopN", currentTopN)
         save()
     }
 
@@ -110,11 +101,9 @@ class SettingsManager(context: Context) {
 
     fun setLists(lists: List<VocabList>) {
         val array = JSONArray()
-
         lists.forEach { list ->
             array.put(list.toJson())
         }
-
         settings.put("lists", array)
         save()
     }
@@ -127,45 +116,17 @@ class SettingsManager(context: Context) {
 
     fun getAllLists(): MutableList<VocabList> {
         val lists = mutableListOf<VocabList>()
-        val array = loadSettings().getJSONArray("lists")
+        val array = getListsArray()
         for (i in 0 until array.length()) {
             lists.add(
                 array.getJSONObject(i).toVocabList()
             )
         }
-
         return lists
     }
 
-    fun addList(vocabList: VocabList) {
-        val lists = getListsArray()
-        lists.put(vocabList.toJson())
-        settings.put("lists", lists)
-        save()
-    }
-
-    fun removeList(id: String) {
-        val oldLists = getListsArray()
-        val newLists = JSONArray()
-
-        for (i in 0 until oldLists.length()) {
-            val list = oldLists.getJSONObject(i)
-            if (list.optString("id") != id) {
-                newLists.put(list)
-            }
-        }
-        settings.put("lists", newLists)
-        save()
-    }
-
-    fun clearLists() {
-        settings.put("lists", JSONArray())
-        save()
-    }
-
-    fun resetToDefaults() {
-        settings = createDefaultSettings()
-        save()
+    fun getFirstList(): VocabList {
+        return getListsArray().getJSONObject(0).toVocabList()
     }
 }
 
