@@ -2,11 +2,14 @@ package com.danjonesapps.vocabr
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.MultiAutoCompleteTextView
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +22,7 @@ import com.google.android.material.slider.RangeSlider
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var listNumberSlider: RangeSlider
+    private lateinit var listNumberTitle: TextView
     private lateinit var termTypesAuto: MultiAutoCompleteTextView
 
     private lateinit var daysSinceSlider: Slider
@@ -54,7 +58,8 @@ class SettingsActivity : AppCompatActivity() {
         // Find views
         // -------------------------
         listNumberSlider = findViewById(R.id.settings_list_number_slider)
-        termTypesAuto = findViewById<MultiAutoCompleteTextView>(R.id.settings_list_term_type_field)
+        listNumberTitle = findViewById(R.id.settings_list_list_number_title)
+        termTypesAuto = findViewById(R.id.settings_list_term_type_field)
 
         daysSinceSlider = findViewById(R.id.settings_days_since_slider)
         correctSlider = findViewById(R.id.settings_correct_slider)
@@ -75,12 +80,39 @@ class SettingsActivity : AppCompatActivity() {
         // Set List controls
         val allLists = AppSettings.settings.getAllLists()
         val vocabList = allLists.first()
+        val stats = vocabList.cachedStats ?: run {
+            Toast.makeText(
+                this,
+                "Error Occurred.",
+                Toast.LENGTH_SHORT
+            ).show()
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
+        val onlyOneList = stats.minListNumber == stats.maxListNumber
+        if (onlyOneList) {
+            listNumberSlider.visibility = View.GONE
+            listNumberTitle.visibility = View.GONE
+        } else {
+            listNumberSlider.stepSize = 1f
+            listNumberSlider.isTickVisible = false
+            listNumberSlider.valueFrom = stats.minListNumber.toFloat()
+            listNumberSlider.valueTo = stats.maxListNumber.toFloat()
+            listNumberSlider.values = listOf(vocabList.minListNumber.toFloat(), vocabList.maxListNumber.toFloat())
+        }
+
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            vocabList.termTypes
+            stats.allTermTypes
         )
         termTypesAuto.setAdapter(adapter)
+        termTypesAuto.setText(
+            vocabList.termTypes.joinToString(", "),
+            false
+        )
         termTypesAuto.threshold = 1
         termTypesAuto.setTokenizer(MultiAutoCompleteTextView.CommaTokenizer())
 
@@ -126,13 +158,14 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         returnButton.setOnClickListener {
+            if (!onlyOneList) {
+                vocabList.minListNumber = listNumberSlider.values[0].toInt()
+                vocabList.maxListNumber = listNumberSlider.values[1].toInt()
+            }
             vocabList.termTypes = termTypesAuto.text.toString()
                 .split(",")
                 .map { it.trim() }
-                .filter {
-                    it.isNotEmpty() && it in (vocabList.cachedStats?.allTermTypes
-                        ?: listOf())
-                }
+                .filter { it.isNotEmpty() && it in stats.allTermTypes }
                 .distinct()
             AppSettings.settings.setSettings(
                 allLists,
@@ -145,8 +178,8 @@ class SettingsActivity : AppCompatActivity() {
                 topNEditText.text.toString().toIntOrNull() ?: topNValue
             )
             recalculateAllLists(this)
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
         }
     }
 }

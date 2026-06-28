@@ -11,6 +11,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.round
 
 class ListAdapter(
     private val context: Context,
@@ -53,11 +54,23 @@ class ListAdapter(
         position: Int
     ) {
         val item = listsData[position]
+        val isFiltered = (item.minListNumber != (item.cachedStats?.minListNumber ?: -1)) ||
+                (item.maxListNumber != (item.cachedStats?.maxListNumber ?: -1)) ||
+                (item.termTypes.toSet() != (item.cachedStats?.allTermTypes ?: listOf()).toSet())
 
         with(holder) {
             listName.text = item.fileName.substringBeforeLast(".")
-            avgLearntScore.text = "${item.cachedStats?.learntScore?.toInt() ?: 0}% (${item.cachedStats?.filteredLearntScore?.toInt() ?: 0}%)"
-            numTerms.text = "${item.cachedStats?.numTerms ?: 0} (${item.cachedStats?.filteredNumTerms ?: 0}) terms"
+
+            val learntScore = round((item.cachedStats?.learntScore ?: 0.0) * 10) / 10
+            if (isFiltered) {
+                val filteredLearntScore = round((item.cachedStats?.filteredLearntScore ?: 0.0) * 10) / 10
+                avgLearntScore.text = "learnt score: ${learntScore}% (${filteredLearntScore}%)"
+                numTerms.text = "${item.cachedStats?.numTerms ?: 0} (${item.cachedStats?.filteredNumTerms ?: 0}) terms"
+            } else {
+                avgLearntScore.text = "learnt score: ${learntScore}%"
+                numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
+            }
+
             dateLastTested.text = item.cachedStats?.dateLastTested ?: ""
 
             if (position == 0) {

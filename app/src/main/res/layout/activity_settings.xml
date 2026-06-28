@@ -11,8 +11,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="20dp">
+        android:layout_height="wrap_content">
 
         <!-- Main Title -->
         <TextView
@@ -102,7 +101,7 @@
                     app:trackColor="@color/term_white_def"
                     app:trackColorInactive="@color/term_white_def"
                     app:thumbColor="@color/term_white_def_high"
-                    app:labelBehavior="gone"
+                    app:labelBehavior="floating"
                     app:layout_constraintTop_toBottomOf="@id/settings_list_list_number_title"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"/>
@@ -126,7 +125,14 @@
                     android:id="@+id/settings_list_term_type_dropdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="15dp"
+                    android:layout_marginHorizontal="18dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="10dp"
+                    app:hintEnabled="false"
+                    app:boxBackgroundMode="outline"
+                    app:boxStrokeErrorColor="@color/term_white_def"
+                    app:boxStrokeColor="@color/topn_stroke_color"
+                    app:boxStrokeWidth="3dp"
                     app:layout_constraintTop_toBottomOf="@id/settings_list_term_type_title"
                     app:layout_constraintStart_toStartOf="parent">
 
@@ -134,12 +140,13 @@
                         android:id="@+id/settings_list_term_type_field"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="5dp"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="7dp"
                         android:textSize="15dp"
                         android:fontFamily="@font/cascadia_mono"
                         android:textStyle="bold"
                         android:hint="Select Term Types"
-                        android:focusable="false"
+                        android:focusable="true"
                         android:clickable="true"
                         android:inputType="none"/>
 
@@ -190,6 +197,32 @@
                         android:textSize="27dp" />
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Show Term Title -->
+                <TextView
+                    android:id="@+id/settings_list_show_term_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_list_show_term_title"
+                    android:textColor="@color/term_white_def"
+                    android:fontFamily="@font/cascadia_mono"
+                    android:textStyle="bold"
+                    android:textSize="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/learn_header_card"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <!-- Show Term Switch -->
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settings_list_show_term_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    app:thumbTint="@color/term_white_def_high"
+                    app:trackTint="@color/term_white_def"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_show_term_title"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
                 <!-- Days Since Title -->
                 <TextView
                     android:id="@+id/settings_learn_days_since_title"
@@ -202,7 +235,7 @@
                     android:textSize="15dp"
                     android:layout_marginStart="15dp"
                     android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/learn_header_card"
+                    app:layout_constraintTop_toBottomOf="@id/settings_list_show_term_switch"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <!-- Days Since Slider -->
@@ -297,32 +330,6 @@
                     app:layout_constraintTop_toBottomOf="@id/settings_learn_tested_title"
                     app:thumbColor="@color/term_white_def_high" />
 
-                <!-- Show Term Title -->
-                <TextView
-                    android:id="@+id/settings_list_show_term_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_list_show_term_title"
-                    android:textColor="@color/term_white_def"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="15dp"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/settings_tested_slider"
-                    app:layout_constraintStart_toStartOf="parent" />
-
-                <!-- Show Term Switch -->
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/settings_list_show_term_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    app:thumbTint="@color/term_white_def_high"
-                    app:trackTint="@color/term_white_def"
-                    app:layout_constraintTop_toBottomOf="@id/settings_list_show_term_title"
-                    app:layout_constraintStart_toStartOf="parent"/>
-
                 <!-- Delay Title -->
                 <TextView
                     android:id="@+id/settings_learn_delay_title"
@@ -335,7 +342,7 @@
                     android:textSize="15dp"
                     android:layout_marginStart="15dp"
                     android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/settings_list_show_term_switch"
+                    app:layout_constraintTop_toBottomOf="@id/settings_tested_slider"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <!-- Delay Input -->
@@ -515,6 +522,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintHorizontal_bias="0.9" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            app:layout_constraintTop_toBottomOf="@id/settings_return_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

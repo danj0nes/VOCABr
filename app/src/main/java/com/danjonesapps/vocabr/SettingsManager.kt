@@ -15,6 +15,7 @@ class SettingsManager(context: Context) {
         private const val FILE_NAME = "settings.json"
     }
     private var settings: JSONObject = loadSettings()
+    private var cachedLists: MutableList<VocabList>? = null
     private fun loadSettings(): JSONObject {
         return try {
             val file = File(appContext.filesDir, FILE_NAME)
@@ -99,11 +100,12 @@ class SettingsManager(context: Context) {
     // LISTS
     // ==================
 
-    fun setLists(lists: List<VocabList>) {
+    fun setLists(lists: MutableList<VocabList>) {
+        cachedLists = lists
+
         val array = JSONArray()
-        lists.forEach { list ->
-            array.put(list.toJson())
-        }
+        lists.forEach { array.put(it.toJson()) }
+
         settings.put("lists", array)
         save()
     }
@@ -115,18 +117,29 @@ class SettingsManager(context: Context) {
     }
 
     fun getAllLists(): MutableList<VocabList> {
-        val lists = mutableListOf<VocabList>()
-        val array = getListsArray()
-        for (i in 0 until array.length()) {
-            lists.add(
-                array.getJSONObject(i).toVocabList()
-            )
+        if (cachedLists == null) {
+            val lists = mutableListOf<VocabList>()
+            val array = getListsArray()
+            for (i in 0 until array.length()) {
+                lists.add(
+                    array.getJSONObject(i).toVocabList()
+                )
+            }
+            cachedLists = lists
         }
-        return lists
+        return cachedLists!!
     }
 
     fun getFirstList(): VocabList {
-        return getListsArray().getJSONObject(0).toVocabList()
+        return if (cachedLists == null) {
+            getListsArray().getJSONObject(0).toVocabList()
+        } else {
+            cachedLists!!.first()
+        }
+    }
+
+    fun hasLoadedLists(): Boolean {
+        return getListsArray().length() != 0
     }
 }
 
@@ -138,18 +151,14 @@ fun loadTermDataFromCsv(file: File): List<TermData> {
             .build()
             .parse()
 
-        // -----------------------------
         // Reindex UNIQUE_ID
-        // -----------------------------
         terms.forEachIndexed { index, term ->
             term.uniqueId = index + 1
         }
 
-        // -----------------------------
+
         // Assign ONE shared LIST_NUMBER
         // to all missing rows
-        // -----------------------------
-
         val nextListNumber = (
                 terms
                     .map { it.listNumber }

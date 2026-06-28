@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                     .getAllLists()
                     .filter {
                         it.id != selected.id
-                    }
+                    }.toMutableList()
 
             AppSettings.settings.setLists(updatedLists)
 
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         exportButton.setOnClickListener {
-            if (AppSettings.settings.getAllLists().isNotEmpty()) {
+            if (AppSettings.settings.hasLoadedLists()) {
                 saveFileToDownloads(fileName = AppSettings.settings.getFirstList().fileName)
             }
             else {
@@ -131,8 +131,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         settingsButton.setOnClickListener {
-            val intent = Intent(this, SettingsActivity::class.java)
-            startActivity(intent)
+            if (AppSettings.settings.hasLoadedLists()) {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
+            }
+            else {
+                Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

@@ -86,9 +86,10 @@ fun saveResult(
     }
     calcLearntScore(
         filteredTerms,
-        if (recalculateAll) null else recent.map { it.first } // IDs only
+        if (recalculateAll) null else recent.map { it.first }, // IDs only
+        showTermFirst
     )
-    sortTerms(filteredTerms)
+    sortTerms(filteredTerms, showTermFirst)
 }
 
 

@@ -96,7 +96,7 @@ class LearnActivity : AppCompatActivity() {
             it.listNumber in vocabListObj.minListNumber..vocabListObj.maxListNumber &&
                     it.termType in vocabListObj.termTypes
         }.toMutableList()
-        sortTerms(filteredTerms)
+        sortTerms(filteredTerms, showTermFirst)
         recentLength = minOf(filteredTerms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
 
         showTerm()
@@ -350,7 +350,7 @@ class LearnActivity : AppCompatActivity() {
             terminating = true
         )
         saveFile()
-        calculateList(listId, filteredTerms)
+        calculateList(listId, terms)
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish() // closes the current activity so user cannot use back

@@ -1,6 +1,7 @@
 package com.danjonesapps.vocabr
 
 import android.content.Context
+import android.util.Log
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -10,7 +11,7 @@ import java.util.UUID
 fun calculateListStats(
     terms: List<TermData>,
     vocabList: VocabList
-): VocabList {
+) {
     val learntScore =
         if (terms.isEmpty()) {
             0.0
@@ -32,7 +33,7 @@ fun calculateListStats(
     val filteredTerms = terms.filter {
         it.listNumber in vocabList.minListNumber..vocabList.maxListNumber &&
                 it.termType in vocabList.termTypes
-    }.toMutableList()
+    }
 
     val filteredLearntScore =
         if (filteredTerms.isEmpty()) {
@@ -52,9 +53,10 @@ fun calculateListStats(
         learntScore = learntScore,
         filteredLearntScore = filteredLearntScore,
         dateLastTested = lastTested,
-        allTermTypes = allTermTypes
+        allTermTypes = allTermTypes,
+        minListNumber = terms.minOf { it.listNumber },
+        maxListNumber = terms.maxOf { it.listNumber}
     )
-    return vocabList
 }
 
 fun recalculateAllLists(context: Context) {
