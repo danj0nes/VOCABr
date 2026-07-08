@@ -15,7 +15,7 @@ data class VocabList(
 
 data class TermData(
     @CsvBindByName(column = "UNIQUE_ID")
-    var uniqueId: Int = 1, // IS ALWAYS RE-INDEXED ON LOAD
+    var uniqueId: Int = -1,  // GETS REWRITTEN ON LOAD IF MISSING
     @CsvBindByName(column = "TERM_LEARNT_SCORE")
     private var termLearntScore: Float = 0f,
     @CsvBindByName(column = "DEF_LEARNT_SCORE")

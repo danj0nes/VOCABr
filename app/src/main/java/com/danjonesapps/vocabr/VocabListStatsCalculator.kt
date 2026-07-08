@@ -1,32 +1,47 @@
 package com.danjonesapps.vocabr
 
 import android.content.Context
-import android.util.Log
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import java.time.format.DateTimeFormatter
 
 fun calculateListStats(
     terms: List<TermData>,
     vocabList: VocabList
 ) {
-    val learntScore =
+    val termLearntScore =
         if (terms.isEmpty()) {
             0.0
         } else {
-            terms.flatMap {
-                listOf(
-                    it.learntScore(false).toDouble(),
-                    it.learntScore(true).toDouble()
-                )
+            terms.map {
+                it.learntScore(true).toDouble()
             }.average() * 100.0
         }
 
-    val lastTested = terms
-        .flatMap { listOfNotNull(it.dateLastTested(false), it.dateLastTested(true)) }
-        .maxOrNull()?.toString() ?: ""
+    val defLearntScore =
+        if (terms.isEmpty()) {
+            0.0
+        } else {
+            terms.map {
+                it.learntScore(false).toDouble()
+            }.average() * 100.0
+        }
+
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val termLastTested = terms
+        .mapNotNull { it.dateLastTested(true) }
+        .maxOrNull()
+        ?.format(formatter)
+        ?: ""
+
+    val defLastTested = terms
+        .mapNotNull { it.dateLastTested(false) }
+        .maxOrNull()
+        ?.format(formatter)
+        ?: ""
 
     val allTermTypes = terms.map { it.termType }.distinct()
 
@@ -35,24 +50,33 @@ fun calculateListStats(
                 it.termType in vocabList.termTypes
     }
 
-    val filteredLearntScore =
+    val filteredTermLearntScore =
         if (filteredTerms.isEmpty()) {
             0.0
         } else {
-            filteredTerms.flatMap {
-                listOf(
-                    it.learntScore(false).toDouble(),
-                    it.learntScore(true).toDouble()
-                )
+            filteredTerms.map {
+                it.learntScore(true).toDouble()
+            }.average() * 100.0
+        }
+
+    val filteredDefLearntScore =
+        if (filteredTerms.isEmpty()) {
+            0.0
+        } else {
+            filteredTerms.map {
+                it.learntScore(false).toDouble()
             }.average() * 100.0
         }
 
     vocabList.cachedStats = VocabListStats(
         numTerms = terms.size,
         filteredNumTerms = filteredTerms.size,
-        learntScore = learntScore,
-        filteredLearntScore = filteredLearntScore,
-        dateLastTested = lastTested,
+        termLearntScore = termLearntScore,
+        defLearntScore = defLearntScore,
+        filteredTermLearntScore = filteredTermLearntScore,
+        filteredDefLearntScore = filteredDefLearntScore,
+        termDateLastTested = termLastTested,
+        defDateLastTested = defLastTested,
         allTermTypes = allTermTypes,
         minListNumber = terms.minOf { it.listNumber },
         maxListNumber = terms.maxOf { it.listNumber}
@@ -109,7 +133,8 @@ fun calculateList(listId: String, terms: List<TermData>) {
     AppSettings.settings.setLists(allLists)
 }
 
-fun sortTerms(terms: MutableList<TermData>, showTermFirst: Boolean = true) {
+fun sortTerms(terms: MutableList<TermData>, showTermFirst: Boolean=true) {
+    terms.shuffle()
     terms.sortBy { it.learntScore(showTermFirst) }
 }
 

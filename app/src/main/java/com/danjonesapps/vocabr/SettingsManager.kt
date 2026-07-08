@@ -72,16 +72,16 @@ class SettingsManager(context: Context) {
     fun getCurrentTopN() = settings.optInt("currentTopN", 20)
 
     fun setSettings(
-        lists: List<VocabList>,
+        lists: MutableList<VocabList>,
         weightDaysSince: Double,
         weightCorrect: Double,
         weightTested: Double,
         allowRepeatsAfter: Int,
-        showTermFirst: Boolean,
         isTopNSelected: Boolean,
         currentTopN: Int,
     ) {
         val array = JSONArray()
+        cachedLists = lists
         lists.forEach { list ->
             array.put(list.toJson())
         }
@@ -90,9 +90,13 @@ class SettingsManager(context: Context) {
         settings.put("weightCorrect", weightCorrect)
         settings.put("weightTested", weightTested)
         settings.put("allowRepeatsAfter", allowRepeatsAfter)
-        settings.put("showTermFirst", showTermFirst)
         settings.put("isTopNSelected", isTopNSelected)
         settings.put("currentTopN", currentTopN)
+        save()
+    }
+
+    fun setShowTermFirst(showTermFirst: Boolean) {
+        settings.put("showTermFirst", showTermFirst)
         save()
     }
 
@@ -151,11 +155,15 @@ fun loadTermDataFromCsv(file: File): List<TermData> {
             .build()
             .parse()
 
-        // Reindex UNIQUE_ID
-        terms.forEachIndexed { index, term ->
-            term.uniqueId = index + 1
-        }
+        // fill missing UNIQUE_ID
+        val nextId = (terms.maxOfOrNull { it.uniqueId.takeIf { id -> id > 0 } ?: 0 } ?: 0)
+        var currentId = nextId + 1
 
+        terms.forEach { term ->
+            if (term.uniqueId < 0) {
+                term.uniqueId = currentId++
+            }
+        }
 
         // Assign ONE shared LIST_NUMBER
         // to all missing rows

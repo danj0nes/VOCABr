@@ -12,9 +12,11 @@
     <color name="correct_green">#4CAF50</color>
     <color name="incorrect_red">#C13434</color>
     <color name="term_white">#FAFAFA</color>
-    <color name="term_white_high">#2E94D1</color>
-    <color name="term_white_def">#BEBEBE</color>
     <color name="term_white_def_high">#1D70A2</color>
+    <color name="term_white_high">#2E94D1</color>
+    <color name="def_white_term_high">#73448C</color>
+    <color name="def_white_high">#965BB4</color>
+    <color name="term_white_def">#BEBEBE</color>
     <color name="learn_score_blue">#2E94D1</color>
     <color name="button_burgundy">#DD3078</color>
     <color name="invisible">#00000000</color>

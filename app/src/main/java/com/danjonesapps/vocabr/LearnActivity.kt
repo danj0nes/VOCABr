@@ -102,7 +102,7 @@ class LearnActivity : AppCompatActivity() {
         showTerm()
 
         // search bar
-        adapter = TermAdapter(emptyList())
+        adapter = TermAdapter(emptyList(), showTermFirst)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
@@ -378,12 +378,12 @@ class LearnActivity : AppCompatActivity() {
                 val searchQuery = query.lowercase()
 
                 val filteredList = filteredTerms.filter {
-                    (it.vocabDef(true).lowercase().contains(searchQuery) ||
-                            it.vocab(true).lowercase().contains(searchQuery)) &&
+                    (it.vocabDef(showTermFirst).lowercase().contains(searchQuery) ||
+                            it.vocab(showTermFirst).lowercase().contains(searchQuery)) &&
                             it.uniqueId != selectedTerm?.termData?.uniqueId
                 }.sortedWith(compareByDescending {
                     // Prioritize items where term or definition starts with the query
-                    it.vocabDef(true).lowercase().startsWith(searchQuery) || it.vocab(true).lowercase().startsWith(searchQuery)
+                    it.vocabDef(showTermFirst).lowercase().startsWith(searchQuery) || it.vocab(showTermFirst).lowercase().startsWith(searchQuery)
                 }).take(20)
 
                 adapter.updateList(filteredList, searchQuery)

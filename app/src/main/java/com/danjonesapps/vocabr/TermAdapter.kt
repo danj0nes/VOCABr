@@ -12,7 +12,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 class TermAdapter(
-    private var terms: List<TermData>
+    private var terms: List<TermData>,
+    private val showTermFirst: Boolean
 ) : RecyclerView.Adapter<TermAdapter.TermViewHolder>() {
 
     private var currentQuery: String = ""
@@ -30,12 +31,26 @@ class TermAdapter(
 
     override fun onBindViewHolder(holder: TermViewHolder, position: Int) {
         val termData = terms[position]
+        val highlightColorTerm = ContextCompat.getColor(
+            holder.itemView.context,
+            if (showTermFirst) {
+                R.color.term_white_high
+            } else {
+                R.color.def_white_high
+            }
+        )
 
-        val highlightColorTerm = ContextCompat.getColor(holder.itemView.context, R.color.term_white_high)
-        val highlightColorDef = ContextCompat.getColor(holder.itemView.context, R.color.term_white_def_high)
+        val highlightColorDef = ContextCompat.getColor(
+            holder.itemView.context,
+            if (showTermFirst) {
+                R.color.term_white_def_high
+            } else {
+                R.color.def_white_term_high
+            }
+        )
 
-        holder.termText.text = highlightTextColor(termData.vocab(true), currentQuery, highlightColorTerm)
-        holder.definitionText.text = highlightTextColor(termData.vocabDef(true), currentQuery, highlightColorDef)
+        holder.termText.text = highlightTextColor(termData.vocab(showTermFirst), currentQuery, highlightColorTerm)
+        holder.definitionText.text = highlightTextColor(termData.vocabDef(showTermFirst), currentQuery, highlightColorDef)
     }
 
     override fun getItemCount() = terms.size

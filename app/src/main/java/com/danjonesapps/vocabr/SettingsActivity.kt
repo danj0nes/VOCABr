@@ -1,6 +1,7 @@
 package com.danjonesapps.vocabr
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
@@ -17,6 +18,7 @@ import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.RangeSlider
 
@@ -64,7 +66,6 @@ class SettingsActivity : AppCompatActivity() {
         daysSinceSlider = findViewById(R.id.settings_days_since_slider)
         correctSlider = findViewById(R.id.settings_correct_slider)
         testedSlider = findViewById(R.id.settings_tested_slider)
-        showTermSwitch = findViewById(R.id.settings_list_show_term_switch)
         delayInputLayout = findViewById(R.id.settings_delay_input)
         delayEditText = findViewById(R.id.delayEditText)
 
@@ -90,6 +91,25 @@ class SettingsActivity : AppCompatActivity() {
             finish()
             return
         }
+        val showTermFirst = AppSettings.settings.getShowTermFirst()
+
+        val colourId = if (showTermFirst) {
+            R.color.term_white_def_high
+        } else {
+            R.color.def_white_term_high
+        }
+        val colour = ContextCompat.getColor(
+            this,
+            colourId
+        )
+        val colourList = requireNotNull(ContextCompat.getColorStateList(this, colourId))
+        returnButton.setBackgroundColor(colour)
+        radioTopN.buttonTintList = colourList
+        radioAll.buttonTintList = colourList
+        listNumberSlider.thumbTintList = colourList
+        daysSinceSlider.thumbTintList = colourList
+        correctSlider.thumbTintList = colourList
+        testedSlider.thumbTintList = colourList
 
         val onlyOneList = stats.minListNumber == stats.maxListNumber
         if (onlyOneList) {
@@ -120,7 +140,6 @@ class SettingsActivity : AppCompatActivity() {
         daysSinceSlider.value = AppSettings.settings.getWeightDaysSince().toFloat()
         correctSlider.value = AppSettings.settings.getWeightCorrect().toFloat()
         testedSlider.value = AppSettings.settings.getWeightTested().toFloat()
-        showTermSwitch.isChecked = AppSettings.settings.getShowTermFirst()
         topNValue = AppSettings.settings.getCurrentTopN()
         delayValue = AppSettings.settings.getAllowRepeatsAfter()
 
@@ -173,7 +192,6 @@ class SettingsActivity : AppCompatActivity() {
                 correctSlider.value.toDouble(),
                 testedSlider.value.toDouble(),
                 delayEditText.text.toString().toIntOrNull() ?: delayValue,
-                showTermSwitch.isChecked,
                 radioTopN.isChecked,
                 topNEditText.text.toString().toIntOrNull() ?: topNValue
             )

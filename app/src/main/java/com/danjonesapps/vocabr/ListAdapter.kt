@@ -16,6 +16,7 @@ import kotlin.math.round
 class ListAdapter(
     private val context: Context,
     private var listsData: MutableList<VocabList>,
+    private var showTermFirst: Boolean,
     private val onListUpdated: (MutableList<VocabList>) -> Unit
 ) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
 
@@ -61,9 +62,23 @@ class ListAdapter(
         with(holder) {
             listName.text = item.fileName.substringBeforeLast(".")
 
-            val learntScore = round((item.cachedStats?.learntScore ?: 0.0) * 10) / 10
+            val learntScore = round(
+                (if (showTermFirst) {
+                    item.cachedStats?.termLearntScore
+                } else {
+                    item.cachedStats?.defLearntScore
+                } ?: 0.0) * 10
+            ) / 10
+
             if (isFiltered) {
-                val filteredLearntScore = round((item.cachedStats?.filteredLearntScore ?: 0.0) * 10) / 10
+                val filteredLearntScore = round(
+                    (if (showTermFirst) {
+                        item.cachedStats?.filteredTermLearntScore
+                    } else {
+                        item.cachedStats?.filteredDefLearntScore
+                    } ?: 0.0) * 10
+                ) / 10
+
                 avgLearntScore.text = "learnt score: ${learntScore}% (${filteredLearntScore}%)"
                 numTerms.text = "${item.cachedStats?.numTerms ?: 0} (${item.cachedStats?.filteredNumTerms ?: 0}) terms"
             } else {
@@ -71,15 +86,23 @@ class ListAdapter(
                 numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
             }
 
-            dateLastTested.text = item.cachedStats?.dateLastTested ?: ""
+            if (showTermFirst) {
+                dateLastTested.text = item.cachedStats?.termDateLastTested ?: ""
+            } else {
+                dateLastTested.text = item.cachedStats?.defDateLastTested ?: ""
+            }
 
             if (position == 0) {
-
+                val colourRes = if (showTermFirst) {
+                    R.color.term_white_def_high
+                } else {
+                    R.color.def_white_term_high
+                }
                 ViewCompat.setBackgroundTintList(
                     container,
                     ContextCompat.getColorStateList(
                         context,
-                        R.color.term_white_def_high
+                        colourRes
                     )
                 )
 
@@ -88,7 +111,6 @@ class ListAdapter(
                 )
 
             } else {
-
                 ViewCompat.setBackgroundTintList(
                     container,
                     ContextCompat.getColorStateList(
@@ -101,7 +123,6 @@ class ListAdapter(
                     R.drawable.radio_unchecked
                 )
             }
-
             itemView.setOnClickListener {
                 moveItemToTop(position)
             }
@@ -136,6 +157,13 @@ class ListAdapter(
         newData: MutableList<VocabList>
     ) {
         listsData = newData
+        notifyDataSetChanged()
+    }
+
+    fun setShowTermFirst(
+        newShowTermFirst: Boolean
+    ) {
+        showTermFirst = newShowTermFirst
         notifyDataSetChanged()
     }
 

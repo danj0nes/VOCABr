@@ -9,6 +9,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,13 +18,17 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ListAdapter
+    private lateinit var learnButtonText: TextView
+    private lateinit var learnButton: MaterialCardView
 
     // Launcher for file picker
     private val csvFilePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -50,10 +55,15 @@ class MainActivity : AppCompatActivity() {
         val loadButton = findViewById<Button>(R.id.load_button)
         val deleteButton = findViewById<Button>(R.id.delete_button)
         val exportButton = findViewById<Button>(R.id.export_button)
-        val learnButton = findViewById<Button>(R.id.learn_button)
+        learnButton = findViewById(R.id.learn_button)
         val settingsButton = findViewById<Button>(R.id.settings_button)
+        val switchButton = findViewById<MaterialCardView>(R.id.switch_button)
+        learnButtonText = findViewById(R.id.learn_btn_bottom_text)
 
         val allLists = AppSettings.settings.getAllLists()
+        val showTermFirst = AppSettings.settings.getShowTermFirst()
+
+        setLearnButton(showTermFirst)
 
         if (allLists.any { it.cachedStats == null }) {
             recalculateAllLists(this)
@@ -61,7 +71,8 @@ class MainActivity : AppCompatActivity() {
 
         adapter = ListAdapter(
             this,
-            allLists
+            allLists,
+            showTermFirst
         ) { updatedLists ->
             AppSettings.settings.setLists(updatedLists)
         }
@@ -126,6 +137,15 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (selected.cachedStats?.filteredNumTerms == 0) {
+                Toast.makeText(
+                    this,
+                    "No VOCAB to test.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
             val intent = Intent(this, LearnActivity::class.java)
             startActivity(intent)
         }
@@ -138,6 +158,13 @@ class MainActivity : AppCompatActivity() {
             else {
                 Toast.makeText(this, "Load VOCAB first.", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        switchButton.setOnClickListener {
+            val showTermFirst = !AppSettings.settings.getShowTermFirst()
+            setLearnButton(showTermFirst)
+            AppSettings.settings.setShowTermFirst(showTermFirst)
+            adapter.setShowTermFirst(showTermFirst)
         }
     }
 
@@ -250,6 +277,16 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Error saving file: ${e.message}.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun setLearnButton(showTermFirst: Boolean) {
+        if (showTermFirst) {
+            learnButtonText.text = "Target → Native"
+            learnButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.term_white_def_high))
+        } else {
+            learnButtonText.text = "Native → Target"
+            learnButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.def_white_term_high))
         }
     }
 }
