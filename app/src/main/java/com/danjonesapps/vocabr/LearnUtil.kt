@@ -11,7 +11,6 @@ data class SelectedTerm (
 
 enum class ButtonCommand {
     QUIT,
-    SAVE,
     BACK,
     NOT,
     SHOW,

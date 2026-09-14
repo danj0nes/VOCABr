@@ -26,7 +26,6 @@ import java.io.File
 class LearnActivity : AppCompatActivity() {
     // buttons and text views
     private lateinit var quitButton: Button
-    private lateinit var saveButton: Button
     private lateinit var backButton: Button
     private lateinit var correctButton: Button
     private lateinit var termCard: MaterialCardView
@@ -263,24 +262,6 @@ class LearnActivity : AppCompatActivity() {
                 return
             }
         }
-        else if (buttonCommand == ButtonCommand.SAVE) {
-            saveResult(
-                filteredTerms = filteredTerms,
-                recent = recent,
-                repeatIncorrectIds = repeatIncorrectIds,
-                showTermFirst = showTermFirst,
-                recentGap = (recentLength - recent.size)
-            )
-            saveFile(verbose = true)
-
-            // ensure than term on screen is chosen again
-            futureTerms.add(0, Pair(topTerm.termData.uniqueId, topTerm.repeatIncorrect))
-
-            recent.clear()
-            correct = 0
-            incorrect = 0
-            resetFlip = false
-        }
         else if (buttonCommand == ButtonCommand.BACK) {
             if (recent.isNotEmpty()) {
                 if (!recent.last().third) {
@@ -458,8 +439,6 @@ class LearnActivity : AppCompatActivity() {
         //buttons
         quitButton = findViewById(R.id.button_quit)
         quitButton.setOnClickListener { buttonPressed(ButtonCommand.QUIT) }
-        saveButton = findViewById(R.id.button_save)
-        saveButton.setOnClickListener { buttonPressed(ButtonCommand.SAVE) }
         backButton = findViewById(R.id.button_back)
         backButton.setOnClickListener { buttonPressed(ButtonCommand.BACK) }
         correctButton = findViewById(R.id.button_correct)

@@ -17,7 +17,7 @@ fun calculateListStats(
             0.0
         } else {
             terms.map {
-                it.learntScore(true).toDouble()
+                it.learntScore(true)
             }.average() * 100.0
         }
 
@@ -26,7 +26,7 @@ fun calculateListStats(
             0.0
         } else {
             terms.map {
-                it.learntScore(false).toDouble()
+                it.learntScore(false)
             }.average() * 100.0
         }
 
@@ -55,7 +55,7 @@ fun calculateListStats(
             0.0
         } else {
             filteredTerms.map {
-                it.learntScore(true).toDouble()
+                it.learntScore(true)
             }.average() * 100.0
         }
 
@@ -64,7 +64,7 @@ fun calculateListStats(
             0.0
         } else {
             filteredTerms.map {
-                it.learntScore(false).toDouble()
+                it.learntScore(false)
             }.average() * 100.0
         }
 

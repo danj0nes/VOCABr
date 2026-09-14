@@ -1,8 +1,7 @@
 package com.danjonesapps.vocabr
 
 import com.opencsv.bean.CsvBindByName
-import com.opencsv.bean.CsvDate
-import java.time.LocalDate
+import java.time.Instant
 
 data class VocabList(
     val id: String,
@@ -17,9 +16,9 @@ data class TermData(
     @CsvBindByName(column = "UNIQUE_ID")
     var uniqueId: Int = -1,  // GETS REWRITTEN ON LOAD IF MISSING
     @CsvBindByName(column = "TERM_LEARNT_SCORE")
-    private var termLearntScore: Float = 0f,
+    private var termLearntScore: Double = 0.0,
     @CsvBindByName(column = "DEF_LEARNT_SCORE")
-    private var defLearntScore: Float = 0f,
+    private var defLearntScore: Double = 0.0,
     @CsvBindByName(column = "TERM")
     private var term: String = "term",
     @CsvBindByName(column = "DEFINITION")
@@ -29,19 +28,13 @@ data class TermData(
     @CsvBindByName(column = "TERM_TYPE")
     var termType: String = "term_type",
     @CsvBindByName(column = "TERM_DATE_LAST_TESTED")
-    @CsvDate("yyyy-MM-dd")
-    private var termDateLastTested: LocalDate? = null,
+    private var termDateLastTested: Instant? = null,
     @CsvBindByName(column = "DEF_DATE_LAST_TESTED")
-    @CsvDate("yyyy-MM-dd")
-    private var defDateLastTested: LocalDate? = null,
-    @CsvBindByName(column = "TERM_LATEST_RESULTS")
-    private var termLatestResults: String = "No Recent Results",
-    @CsvBindByName(column = "DEF_LATEST_RESULTS")
-    private var defLatestResults: String = "No Recent Results",
-    @CsvBindByName(column = "TERM_TESTED_COUNT")
-    private var termTestedCount: Int = 0,
-    @CsvBindByName(column = "DEF_TESTED_COUNT")
-    private var defTestedCount: Int = 0,
+    private var defDateLastTested: Instant? = null,
+    @CsvBindByName(column = "TERM_AVG_LEARNT_SCORE")
+    private var termAvgLearntScore: Double = 0.0,
+    @CsvBindByName(column = "DEF_AVG_LEARNT_SCORE")
+    private var defAvgLearntScore: Double = 0.0,
     @CsvBindByName(column = "EXAMPLE_1")
     var exampleOne: String? = null,
     @CsvBindByName(column = "EXAMPLE_2")
@@ -57,10 +50,10 @@ data class TermData(
     @CsvBindByName(column = "IPA")
     var ipa: String? = null,
 ) {
-    fun learntScore(termFirst: Boolean): Float =
+    fun learntScore(termFirst: Boolean): Double =
         if (termFirst) termLearntScore else defLearntScore
 
-    fun setLearntScore(termFirst: Boolean, value: Float) {
+    fun setLearntScore(termFirst: Boolean, value: Double) {
         if (termFirst) {
             termLearntScore = value
         } else {
@@ -68,10 +61,10 @@ data class TermData(
         }
     }
 
-    fun dateLastTested(termFirst: Boolean): LocalDate? =
+    fun dateLastTested(termFirst: Boolean): Instant? =
         if (termFirst) termDateLastTested else defDateLastTested
 
-    fun setDateLastTested(termFirst: Boolean, value: LocalDate?) {
+    fun setDateLastTested(termFirst: Boolean, value: Instant?) {
         if (termFirst) {
             termDateLastTested = value
         } else {
@@ -79,25 +72,14 @@ data class TermData(
         }
     }
 
-    fun latestResults(termFirst: Boolean): String =
-        if (termFirst) termLatestResults else defLatestResults
+    fun avgLearntScore(termFirst: Boolean): Double =
+        if (termFirst) termAvgLearntScore else defAvgLearntScore
 
-    fun setLatestResults(termFirst: Boolean, value: String) {
+    fun setAvgLearntScore(termFirst: Boolean, value: Double) {
         if (termFirst) {
-            termLatestResults = value
+            termAvgLearntScore = value
         } else {
-            defLatestResults = value
-        }
-    }
-
-    fun testedCount(termFirst: Boolean): Int =
-        if (termFirst) termTestedCount else defTestedCount
-
-    fun setTestedCount(termFirst: Boolean, value: Int) {
-        if (termFirst) {
-            termTestedCount = value
-        } else {
-            defTestedCount = value
+            defAvgLearntScore = value
         }
     }
 
