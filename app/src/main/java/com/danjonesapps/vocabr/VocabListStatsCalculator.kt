@@ -4,9 +4,12 @@ import android.content.Context
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Duration
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs as abs
 
 fun calculateListStats(
     terms: List<TermData>,
@@ -138,7 +141,24 @@ fun sortTerms(terms: MutableList<TermData>, showTermFirst: Boolean=true) {
     terms.sortBy { it.learntScore(showTermFirst) }
 }
 
-fun calcLearntScore(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false) {
+fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false) {
+    fun calcGap(dateLastTested: Instant): Double {
+        return abs(Duration.between(dateLastTested, Instant.now()).toMillis() / 86_400_000.0) // could divide here by lambda param
+    }
+
+    fun calcProbability(learntScore: Double, gap: Double): Double {
+        return 0.0 // !!!
+    }
+
+    fun calcLearntScore(learntScore: Double, avgLearntScore: Double, dateLastTested: Instant, predicted: Boolean): Double {
+        val gap = calcGap(dateLastTested)
+        val probability = calcProbability(learntScore, gap)
+        val boost = maxOf(avgLearntScore - learntScore, 0.0)
+        val score = learntScore + gap * (probability + boost)
+        return if (predicted) probability * score else probability
+    }
+
+
     fun minMax(min: Float, max: Float, value: Float, inverse: Boolean = false): Float {
         return if (max > min) {
             val result = (value - min) / (max - min)

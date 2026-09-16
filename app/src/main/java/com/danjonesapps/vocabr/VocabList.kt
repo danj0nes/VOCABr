@@ -49,6 +49,9 @@ data class TermData(
     var exampleThreeDef: String? = null,
     @CsvBindByName(column = "IPA")
     var ipa: String? = null,
+
+    // not imported or exported
+    var rememberingProbability: Double = 0.0,
 ) {
     fun learntScore(termFirst: Boolean): Double =
         if (termFirst) termLearntScore else defLearntScore
