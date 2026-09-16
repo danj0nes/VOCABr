@@ -12,4 +12,6 @@ data class VocabListStats(
     val allTermTypes: List<String>,
     val minListNumber: Int,
     val maxListNumber: Int,
+    val termDueCount: Int,
+    val defDueCount: Int
 )

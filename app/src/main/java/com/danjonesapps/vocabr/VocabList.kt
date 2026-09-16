@@ -51,7 +51,8 @@ data class TermData(
     var ipa: String? = null,
 
     // not imported or exported
-    var rememberingProbability: Double = 0.0,
+    private var termRememberingProbability: Double = 0.0,
+    private var defRememberingProbability: Double = 0.0,
 ) {
     fun learntScore(termFirst: Boolean): Double =
         if (termFirst) termLearntScore else defLearntScore
@@ -83,6 +84,17 @@ data class TermData(
             termAvgLearntScore = value
         } else {
             defAvgLearntScore = value
+        }
+    }
+
+    fun rememberingProbability(termFirst: Boolean): Double =
+        if (termFirst) termRememberingProbability else defRememberingProbability
+
+    fun setRememberingProbability(termFirst: Boolean, value: Double) {
+        if (termFirst) {
+            termRememberingProbability = value
+        } else {
+            defRememberingProbability
         }
     }
 

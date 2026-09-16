@@ -2,11 +2,10 @@ package com.danjonesapps.vocabr
 
 import android.content.Context
 import java.io.File
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs as abs
@@ -20,8 +19,8 @@ fun calculateListStats(
             0.0
         } else {
             terms.map {
-                it.learntScore(true)
-            }.average() * 100.0
+                minOf(it.learntScore(true), 1.0)
+            }.average().toInt() * 100.0
         }
 
     val defLearntScore =
@@ -29,21 +28,35 @@ fun calculateListStats(
             0.0
         } else {
             terms.map {
-                it.learntScore(false)
-            }.average() * 100.0
+                minOf(it.learntScore(false), 1.0)
+            }.average().toInt() * 100.0
         }
 
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    fun formatLastTested(instant: Instant?): String {
+        if (instant == null) return ""
+
+        val zone = ZoneId.systemDefault()
+        val dateTime = instant.atZone(zone)
+        val today = LocalDate.now(zone)
+
+        return if (dateTime.toLocalDate() == today) {
+            dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        } else {
+            dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        }
+    }
+
+    // might not need to calc every time?
     val termLastTested = terms
         .mapNotNull { it.dateLastTested(true) }
         .maxOrNull()
-        ?.format(formatter)
+        ?.let { formatLastTested(it) }
         ?: ""
 
     val defLastTested = terms
         .mapNotNull { it.dateLastTested(false) }
         .maxOrNull()
-        ?.format(formatter)
+        ?.let { formatLastTested(it) }
         ?: ""
 
     val allTermTypes = terms.map { it.termType }.distinct()
@@ -58,8 +71,8 @@ fun calculateListStats(
             0.0
         } else {
             filteredTerms.map {
-                it.learntScore(true)
-            }.average() * 100.0
+                minOf(it.learntScore(true), 0.0)
+            }.average().toInt() * 100.0
         }
 
     val filteredDefLearntScore =
@@ -67,9 +80,13 @@ fun calculateListStats(
             0.0
         } else {
             filteredTerms.map {
-                it.learntScore(false)
-            }.average() * 100.0
+                minOf(it.learntScore(false), 0.0)
+            }.average().toInt() * 100.0
         }
+
+    val termDueCount = terms.count { it.rememberingProbability(true) < 0.7 } // need to calc threshold
+    val defDueCount = terms.count { it.rememberingProbability(false) < 0.7 } // need to calc threshold
+
 
     vocabList.cachedStats = VocabListStats(
         numTerms = terms.size,
@@ -82,7 +99,9 @@ fun calculateListStats(
         defDateLastTested = defLastTested,
         allTermTypes = allTermTypes,
         minListNumber = terms.minOf { it.listNumber },
-        maxListNumber = terms.maxOf { it.listNumber}
+        maxListNumber = terms.maxOf { it.listNumber},
+        termDueCount = termDueCount,
+        defDueCount = defDueCount
     )
 }
 
@@ -98,8 +117,8 @@ fun recalculateAllLists(context: Context) {
         if (!file.exists()) return@forEach
 
         val terms = loadTermDataFromCsv(file).toMutableList()
-        calcLearntScore(terms)
-        calcLearntScore(terms, showTermFirst = true)
+        calcLearntScores(terms)
+        calcLearntScores(terms, showTermFirst = true)
         sortTerms(terms)
         saveTermDataToCsv(terms, file)
         calculateListStats(terms, vocabList)
@@ -109,8 +128,8 @@ fun recalculateAllLists(context: Context) {
 
 fun calculateNewList(file: File, fileName: String): VocabList {
     val terms = loadTermDataFromCsv(file).toMutableList()
-    calcLearntScore(terms)
-    calcLearntScore(terms, showTermFirst = true)
+    calcLearntScores(terms)
+    calcLearntScores(terms, showTermFirst = true)
     sortTerms(terms)
     saveTermDataToCsv(terms, file)
 
@@ -138,34 +157,24 @@ fun calculateList(listId: String, terms: List<TermData>) {
 
 fun sortTerms(terms: MutableList<TermData>, showTermFirst: Boolean=true) {
     terms.shuffle()
-    terms.sortBy { it.learntScore(showTermFirst) }
+    terms.sortBy { it.rememberingProbability(showTermFirst) }
 }
 
-fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false) {
-    fun calcGap(dateLastTested: Instant): Double {
-        return abs(Duration.between(dateLastTested, Instant.now()).toMillis() / 86_400_000.0) // could divide here by lambda param
+fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false, predicted: Boolean=true) {
+    fun calcGap(dateLastTested: Instant?): Double {
+        return dateLastTested?.let {
+            abs(Duration.between(it, Instant.now()).toMillis() / 86_400_000.0) / 550.0 // divided here by lambda param (~18 months)
+        } ?: 0.0
     }
 
     fun calcProbability(learntScore: Double, gap: Double): Double {
         return 0.0 // !!!
     }
 
-    fun calcLearntScore(learntScore: Double, avgLearntScore: Double, dateLastTested: Instant, predicted: Boolean): Double {
-        val gap = calcGap(dateLastTested)
-        val probability = calcProbability(learntScore, gap)
+    fun calcLearntScore(learntScore: Double, avgLearntScore: Double, probability: Double, gap: Double, predicted: Boolean): Double {
         val boost = maxOf(avgLearntScore - learntScore, 0.0)
         val score = learntScore + gap * (probability + boost)
         return if (predicted) probability * score else probability
-    }
-
-
-    fun minMax(min: Float, max: Float, value: Float, inverse: Boolean = false): Float {
-        return if (max > min) {
-            val result = (value - min) / (max - min)
-            if (inverse) 1 - result else result
-        } else {
-            if (inverse) 1f else 0f
-        }
     }
 
     // Select rows to update
@@ -177,57 +186,27 @@ fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, 
         terms.indices.toList()
     }
 
-    // Get the max for days_since_last_test and tested_count columns
-    val earliestDate = terms.mapNotNull { it.dateLastTested(showTermFirst) }.minOrNull()
-    var maxDays: Int = if (earliestDate != null) {
-        ChronoUnit.DAYS.between(earliestDate, todayDate).toInt()
-    } else {
-        0
-    }
-    maxDays = maxOf(daysSinceMinCap, maxDays)
-    val maxTestedCount = terms.maxOfOrNull { it.testedCount(showTermFirst) } ?: 0
-
     // Update learnt_score for each term
     for (row in rowsToUpdate){
         val termData: TermData = terms[row]
 
-        // Skip calculation if tested_count == 0
-        if (termData.testedCount(showTermFirst) == 0){
+        // Skip calculation if not tested before
+        if (termData.dateLastTested(showTermFirst) == null) {
             continue
         }
 
-        // Min-max normalize days_since_last_test
-        var daysSinceLastTestNormalised: Float
-        if (termData.dateLastTested(showTermFirst) != null) {
-            val daysSinceLastTest = ChronoUnit.DAYS.between(termData.dateLastTested(showTermFirst), todayDate).toInt()
-            daysSinceLastTestNormalised = minMax(min=0f, max=maxDays.toFloat(), value=daysSinceLastTest.toFloat(), inverse=true)
-        } else {
-            daysSinceLastTestNormalised = 0f
-        }
+        val gap = calcGap(termData.dateLastTested(showTermFirst))
+        val probability = calcProbability(termData.learntScore(showTermFirst), gap)
+        termData.setRememberingProbability(showTermFirst, probability)
 
-        // Calculate percentage correct
-        val correctPercentage: Float = if (termData.latestResults(showTermFirst) != BLANK_RESULTS_STRING) {
-            termData.latestResults(showTermFirst).count { it == 'O'}.toFloat() / maxOf(
-                latestResultsLength, termData.latestResults(showTermFirst).length).toFloat()
-        } else {
-            0f
-        }
+        val learntScore = calcLearntScore(
+            termData.learntScore(showTermFirst),
+            termData.avgLearntScore(showTermFirst),
+            probability = probability,
+            gap = gap,
+            predicted = predicted
+        )
 
-        // Piecewise weighted Min-max normalize tested_count
-        val lowerPiece: Float = ((minOf(termData.testedCount(showTermFirst), testedMaxCap).toFloat() / testedMaxCap.toFloat()) * testedCapWeighting).toFloat()
-        val upperPiece: Float = (minMax(min= testedMaxCap.toFloat(), max= maxOf(maxTestedCount, testedMaxCap).toFloat(), value= maxOf(termData.testedCount(showTermFirst), testedMaxCap).toFloat()) * (1 - testedCapWeighting)).toFloat()
-
-        val testedCountNormalised = lowerPiece + upperPiece
-
-        // Compute new learntScore
-        val denominator = (AppSettings.settings.getWeightDaysSince() + AppSettings.settings.getWeightCorrect() + AppSettings.settings.getWeightTested())
-
-        val numerator = (daysSinceLastTestNormalised * AppSettings.settings.getWeightDaysSince()) +
-                (correctPercentage * AppSettings.settings.getWeightCorrect()) +
-                (testedCountNormalised * AppSettings.settings.getWeightTested())
-
-        val result = numerator / denominator
-
-        termData.setLearntScore(showTermFirst, BigDecimal(result.toString()).setScale(4, RoundingMode.HALF_UP).toFloat())
+        termData.setLearntScore(showTermFirst, learntScore)
     }
 }
