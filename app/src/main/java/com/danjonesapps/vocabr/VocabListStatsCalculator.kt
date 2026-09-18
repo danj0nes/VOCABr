@@ -87,7 +87,6 @@ fun calculateListStats(
     val termDueCount = terms.count { it.rememberingProbability(true) < 0.7 } // need to calc threshold
     val defDueCount = terms.count { it.rememberingProbability(false) < 0.7 } // need to calc threshold
 
-
     vocabList.cachedStats = VocabListStats(
         numTerms = terms.size,
         filteredNumTerms = filteredTerms.size,

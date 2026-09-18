@@ -1,12 +1,13 @@
 package com.danjonesapps.vocabr
 
-import java.time.LocalDate
+import java.time.Instant
 
 data class Quad<A, B, C, D>(val recent: A, val repeatIncorrectIds: B, val futureTerms: C, val selectedTerm: D)
+data class Quint<A, B, C, D, E>(val uniqueId: A, val wasCorrect: B, val repeatIncorrect: C, val dateTested: D, val wasDue: E)
 
 data class SelectedTerm (
     val termData: TermData,
-    val repeatIncorrect: Boolean,
+    val repeatIncorrect: Boolean
 )
 
 enum class ButtonCommand {
@@ -17,76 +18,42 @@ enum class ButtonCommand {
     GOT
 }
 
-const val BLANK_RESULTS_STRING: String = "No Recent Results"
-var todayDate: LocalDate = LocalDate.now()
-var testedMaxCap: Int = 15
-var testedCapWeighting: Double = 0.9
-var latestResultsLength: Int = 10
-var daysSinceMinCap: Int = 30
-
-
 fun saveResult(
     filteredTerms: MutableList<TermData>,
-    recent: MutableList<Triple<Int, Boolean, Boolean>>,
+    recent: MutableList<Quint<Int, Boolean, Boolean, Instant, Boolean>>,
     repeatIncorrectIds: MutableList<Pair<Int, Int>>,
     showTermFirst: Boolean,
-    terminating: Boolean = false,
     recentGap: Int = 0,
 ) {
-    var recalculateAll = false
-
-    // if terminating, save results of all incorrect terms waiting to be repeated
-    if (terminating) {
-        for ((repeatIncorrectId, _) in repeatIncorrectIds) {
-            recent.add(Triple(repeatIncorrectId, false, true))
-        }
-    }
-
     if (recent.isEmpty()) { return }
 
-    for ((index, triple) in recent.withIndex()) {
-        val (id, isCorrect, repeatIncorrect) = triple
+    for ((index, quint) in recent.withIndex()) {
+        val (id, isCorrect, _, dateTested, _) = quint
 
-        if (isCorrect || terminating) {
-            // if max tested_count will be broken then recalculateAll ~all learnt scores
-            val row = filteredTerms.find { it.uniqueId == id } ?: continue
+        val row = filteredTerms.find { it.uniqueId == id } ?: continue
 
-            if (!recalculateAll) {
-                val testedCount = row.testedCount(showTermFirst)
-                val maxTested = filteredTerms.maxOfOrNull { it.testedCount(showTermFirst) } ?: 0
-
-                if (testedCount == maxTested && testedCount >= testedMaxCap) {
-                    recalculateAll = true
-                }
-            }
-
-            // Update date_last_tested
-            row.setDateLastTested(showTermFirst, todayDate)
-
-            // Update latest_results
-            val prefix = if (repeatIncorrect) "X" else "O"
-            if (row.latestResults(showTermFirst) != BLANK_RESULTS_STRING) {
-                val updated = prefix + row.latestResults(showTermFirst)
-                if (updated.length > latestResultsLength) {
-                    row.setLatestResults(showTermFirst, updated.substring(0, latestResultsLength))
-                } else {
-                    row.setLatestResults(showTermFirst, updated)
-                }
-            } else {
-                row.setLatestResults(showTermFirst, prefix)
-            }
-
-            // Increment tested_count
-            row.setTestedCount(showTermFirst, row.testedCount(showTermFirst) + 1)
+        if (isCorrect) {
+            calcLearntScores(
+                filteredTerms,
+                uniqueIds = recent.map { it.uniqueId },
+                showTermFirst = true,
+                predicted = false
+            )
         } else {
-            // Handle incorrect term repeat
+            row.setLearntScore(showTermFirst, 0.0)
+            row.setRememberingProbability(showTermFirst, 0.0)
             repeatIncorrectIds.add(Pair(id, index + recentGap))
         }
+
+        row.setDateLastTested(showTermFirst, dateTested)
+        row.setAvgLearntScore(
+            showTermFirst,
+            0.1 * row.learntScore(showTermFirst) + (1 - 0.1) * row.avgLearntScore(showTermFirst)
+        ) // need to set param !!!
     }
-    calcLearntScore(
+    calcLearntScores(
         filteredTerms,
-        if (recalculateAll) null else recent.map { it.first }, // IDs only
-        showTermFirst
+        showTermFirst = showTermFirst
     )
     sortTerms(filteredTerms, showTermFirst)
 }
@@ -94,13 +61,13 @@ fun saveResult(
 
 fun getTop(
     filteredTerms: MutableList<TermData>,
-    recent: MutableList<Triple<Int, Boolean, Boolean>>,
+    recent: MutableList<Quint<Int, Boolean, Boolean, Instant, Boolean>>,
     repeatIncorrectIds: MutableList<Pair<Int, Int>>,
     futureTerms: MutableList<Pair<Int, Boolean>>,
     reversing: Boolean = false,
     quitting: Boolean = false
 ): Quad<
-        MutableList<Triple<Int, Boolean, Boolean>>, // recent
+        MutableList<Quint<Int, Boolean, Boolean, Instant, Boolean>>, // recent
         MutableList<Pair<Int, Int>>,                // repeatIncorrectIds
         MutableList<Pair<Int, Boolean>>,            // futureTerms
         SelectedTerm?                               // selected term
@@ -138,7 +105,7 @@ fun getTop(
 
     // 3. Pick from filtered df
     if (data == null && !quitting) {
-        val avoidIds = (recent.map { it.first } + repeatIncorrectIds.map { it.first }).toSet()
+        val avoidIds = (recent.map { it.uniqueId } + repeatIncorrectIds.map { it.first }).toSet()
         for (term in filteredTerms) {
             if (term.uniqueId !in avoidIds) {
                 data = termData(term.uniqueId, false)

@@ -11,7 +11,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
-import kotlin.math.round
 
 class ListAdapter(
     private val context: Context,
@@ -27,6 +26,7 @@ class ListAdapter(
         val avgLearntScore: TextView = itemView.findViewById(R.id.avgLearntScore)
         val numTerms: TextView = itemView.findViewById(R.id.numTerms)
         val dateLastTested: TextView = itemView.findViewById(R.id.dateLastTested)
+        val dueCount: TextView = itemView.findViewById(R.id.text_due)
         val radioImageView: ImageView = itemView.findViewById(R.id.radio_button)
         val container: ConstraintLayout = itemView.findViewById(R.id.item_container)
     }
@@ -62,34 +62,40 @@ class ListAdapter(
         with(holder) {
             listName.text = item.fileName.substringBeforeLast(".")
 
-            val learntScore = round(
-                (if (showTermFirst) {
+            val learntScore = if (showTermFirst) {
                     item.cachedStats?.termLearntScore
                 } else {
                     item.cachedStats?.defLearntScore
-                } ?: 0.0) * 10
-            ) / 10
+                } ?: 0
 
             if (isFiltered) {
-                val filteredLearntScore = round(
-                    (if (showTermFirst) {
+                val filteredLearntScore = if (showTermFirst) {
                         item.cachedStats?.filteredTermLearntScore
                     } else {
                         item.cachedStats?.filteredDefLearntScore
-                    } ?: 0.0) * 10
-                ) / 10
+                    } ?: 0
 
-                avgLearntScore.text = "learnt score: ${learntScore}% (${filteredLearntScore}%)"
-                numTerms.text = "${item.cachedStats?.numTerms ?: 0} (${item.cachedStats?.filteredNumTerms ?: 0}) terms"
+                avgLearntScore.text = "${filteredLearntScore}% learnt"
+                numTerms.text = "${item.cachedStats?.numTerms ?: 0}/${item.cachedStats?.filteredNumTerms ?: 0} terms"
             } else {
-                avgLearntScore.text = "learnt score: ${learntScore}%"
+                avgLearntScore.text = "${learntScore}% learnt"
                 numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
             }
 
+            var due: Int
             if (showTermFirst) {
                 dateLastTested.text = item.cachedStats?.termDateLastTested ?: ""
+                due = item.cachedStats?.termDueCount ?: 0
             } else {
                 dateLastTested.text = item.cachedStats?.defDateLastTested ?: ""
+                due = item.cachedStats?.defDueCount ?: 0
+            }
+
+            if (due == 0) {
+                dueCount.visibility = View.GONE
+            } else {
+                dueCount.visibility = View.VISIBLE
+                dueCount.text = due.toString()
             }
 
             if (position == 0) {
@@ -106,6 +112,8 @@ class ListAdapter(
                     )
                 )
 
+                numTerms.visibility = View.VISIBLE
+
                 radioImageView.setImageResource(
                     R.drawable.radio_checked
                 )
@@ -118,6 +126,8 @@ class ListAdapter(
                         R.color.button_gray
                     )
                 )
+
+                numTerms.visibility = View.GONE
 
                 radioImageView.setImageResource(
                     R.drawable.radio_unchecked

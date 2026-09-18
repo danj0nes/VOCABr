@@ -22,21 +22,23 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
 import java.io.File
+import java.time.Instant
 
 class LearnActivity : AppCompatActivity() {
     // buttons and text views
     private lateinit var quitButton: Button
     private lateinit var backButton: Button
     private lateinit var correctButton: Button
+    private lateinit var incorrectButton: Button
     private lateinit var termCard: MaterialCardView
     private lateinit var examplesCard: ConstraintLayout
-    private lateinit var incorrectButton: Button
 
     private lateinit var termTypeTextView: TextView
     private lateinit var termTextView: TextView
     private lateinit var quittingTextView: TextView
     private lateinit var correctTextView: TextView
     private lateinit var incorrectTextView: TextView
+    private lateinit var dueTextView: TextView
     private lateinit var termSubTextView: TextView
     private lateinit var examplesHintTextView: TextView
     private lateinit var exampleOneTextView: TextView
@@ -55,12 +57,13 @@ class LearnActivity : AppCompatActivity() {
     //other vars and vals
     private var terms: MutableList<TermData> = mutableListOf()
     private var filteredTerms: MutableList<TermData> = mutableListOf()
-    private var recent: MutableList<Triple<Int, Boolean, Boolean>> = mutableListOf()
+    private var recent: MutableList<Quint<Int, Boolean, Boolean, Instant, Boolean>> = mutableListOf()
     private var futureTerms: MutableList<Pair<Int, Boolean>> = mutableListOf()
     private var repeatIncorrectIds: MutableList<Pair<Int, Int>> = mutableListOf()
     private var selectedTerm: SelectedTerm? = null
     private var correct: Int = 0
     private var incorrect: Int = 0
+    private var dueCount: Int = 0
     private var recentLength: Int = 0
     private var reversing: Boolean = false
     private var quitting: Boolean = false
@@ -89,14 +92,20 @@ class LearnActivity : AppCompatActivity() {
         csvFile = File(filesDir, vocabListObj.fileName)
         listId = vocabListObj.id
         showTermFirst = AppSettings.settings.getShowTermFirst()
+
         terms = loadTermDataFromCsv(csvFile).toMutableList()
 
         filteredTerms = terms.filter {
             it.listNumber in vocabListObj.minListNumber..vocabListObj.maxListNumber &&
                     it.termType in vocabListObj.termTypes
         }.toMutableList()
+
+        calcLearntScores(filteredTerms, showTermFirst = showTermFirst)
         sortTerms(filteredTerms, showTermFirst)
+
         recentLength = minOf(filteredTerms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
+
+        dueCount = terms.count { it.rememberingProbability(showTermFirst) < 0.7 } // need to calc threshold
 
         showTerm()
 
@@ -187,9 +196,6 @@ class LearnActivity : AppCompatActivity() {
 
         reversing = false
 
-        // SET LEARNT SCORE
-        //learntScoreTextView.text = "learnt score: ${String.format("%.1f%%", topTerm.learntScore * 100f)}"
-
         // SET TERM TYPE
         termTypeTextView.text = topTerm.termData.termType
 
@@ -206,6 +212,15 @@ class LearnActivity : AppCompatActivity() {
         // SET QUITTING
         if (quitting) {
             quittingTextView.visibility = View.VISIBLE
+            // Could have due count show how many terms left when quitting
+        }
+
+        // SET DUE COUNT
+        if (dueCount > 0) {
+            dueTextView.visibility = View.VISIBLE
+            dueTextView.text = dueCount.toString()
+        } else {
+            dueTextView.visibility = View.GONE
         }
 
         // SET CORRECT AND INCORRECT
@@ -246,29 +261,23 @@ class LearnActivity : AppCompatActivity() {
                 recent.clear()
                 correct = 0
                 incorrect = 0
+                dueCount = 0
             }
             else { // TERMINATE
-                // ensure that term on screen if gotten wrong is saved as gotten wrong
-                if (topTerm.repeatIncorrect) {
-                    repeatIncorrectIds.add(0, Pair(topTerm.termData.uniqueId, 0))
-                }
-
-                // add all repeat incorrect terms in future_terms to repeat_incorrect_ids
-                repeatIncorrectIds.addAll(
-                    futureTerms.filter { it.second }.map { Pair(it.first, 0) }
-                )
-
                 saveAndTerminate()
                 return
             }
         }
         else if (buttonCommand == ButtonCommand.BACK) {
             if (recent.isNotEmpty()) {
-                if (!recent.last().third) {
-                    if (recent.last().second) {
+                if (!recent.last().repeatIncorrect) {
+                    if (recent.last().wasCorrect) {
                         correct--
                     } else {
                         incorrect--
+                    }
+                    if (recent.last().wasDue) {
+                        dueCount++
                     }
                 }
                 futureTerms.add(0, Pair(topTerm.termData.uniqueId, topTerm.repeatIncorrect))
@@ -280,14 +289,26 @@ class LearnActivity : AppCompatActivity() {
             }
         }
         else if (buttonCommand == ButtonCommand.NOT) {
-            recent.add(Triple(topTerm.termData.uniqueId, false, topTerm.repeatIncorrect))
+            recent.add(Quint(
+                topTerm.termData.uniqueId,
+                false,
+                topTerm.repeatIncorrect,
+                Instant.now(),
+                dueCount > 0
+            ))
             if (!topTerm.repeatIncorrect) {
                 incorrect++
             }
             continueToNext()
         }
         else if (buttonCommand == ButtonCommand.GOT) {
-            recent.add(Triple(topTerm.termData.uniqueId, true, topTerm.repeatIncorrect))
+            recent.add(Quint(
+                topTerm.termData.uniqueId,
+                true,
+                topTerm.repeatIncorrect,
+                Instant.now(),
+                dueCount > 0
+            ))
             if (!topTerm.repeatIncorrect) {
                 correct++
             }
@@ -303,6 +324,10 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun continueToNext(){
+        if (dueCount > 0) {
+            dueCount--
+        }
+
         if (recent.size > recentLength) {
             saveResult(filteredTerms, mutableListOf(recent[0]), repeatIncorrectIds, showTermFirst)
             recent.removeAt(0)
@@ -327,8 +352,7 @@ class LearnActivity : AppCompatActivity() {
             filteredTerms = filteredTerms,
             recent = recent,
             repeatIncorrectIds = repeatIncorrectIds,
-            showTermFirst = showTermFirst,
-            terminating = true
+            showTermFirst = showTermFirst
         )
         saveFile()
         calculateList(listId, terms)
@@ -456,6 +480,7 @@ class LearnActivity : AppCompatActivity() {
         quittingTextView = findViewById(R.id.text_quitting)
         correctTextView = findViewById(R.id.text_correct)
         incorrectTextView = findViewById(R.id.text_incorrect)
+        dueTextView = findViewById(R.id.text_due)
         termSubTextView = findViewById(R.id.text_sub_term)
         examplesHintTextView = findViewById(R.id.examples_hint)
         exampleOneTextView = findViewById(R.id.example_1)

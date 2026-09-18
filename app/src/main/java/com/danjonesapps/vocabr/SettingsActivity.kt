@@ -30,7 +30,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var daysSinceSlider: Slider
     private lateinit var correctSlider: Slider
     private lateinit var testedSlider: Slider
-    private lateinit var showTermSwitch: MaterialSwitch
     private lateinit var delayInputLayout: TextInputLayout
     private lateinit var delayEditText: TextInputEditText
 
