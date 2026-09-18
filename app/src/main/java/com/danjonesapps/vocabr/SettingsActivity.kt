@@ -1,7 +1,6 @@
 package com.danjonesapps.vocabr
 
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
@@ -14,12 +13,10 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.activity.enableEdgeToEdge
-import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.RangeSlider
 
 class SettingsActivity : AppCompatActivity() {
@@ -27,9 +24,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var listNumberTitle: TextView
     private lateinit var termTypesAuto: MultiAutoCompleteTextView
 
-    private lateinit var daysSinceSlider: Slider
-    private lateinit var correctSlider: Slider
-    private lateinit var testedSlider: Slider
     private lateinit var delayInputLayout: TextInputLayout
     private lateinit var delayEditText: TextInputEditText
 
@@ -62,9 +56,6 @@ class SettingsActivity : AppCompatActivity() {
         listNumberTitle = findViewById(R.id.settings_list_list_number_title)
         termTypesAuto = findViewById(R.id.settings_list_term_type_field)
 
-        daysSinceSlider = findViewById(R.id.settings_days_since_slider)
-        correctSlider = findViewById(R.id.settings_correct_slider)
-        testedSlider = findViewById(R.id.settings_tested_slider)
         delayInputLayout = findViewById(R.id.settings_delay_input)
         delayEditText = findViewById(R.id.delayEditText)
 
@@ -106,9 +97,6 @@ class SettingsActivity : AppCompatActivity() {
         radioTopN.buttonTintList = colourList
         radioAll.buttonTintList = colourList
         listNumberSlider.thumbTintList = colourList
-        daysSinceSlider.thumbTintList = colourList
-        correctSlider.thumbTintList = colourList
-        testedSlider.thumbTintList = colourList
 
         val onlyOneList = stats.minListNumber == stats.maxListNumber
         if (onlyOneList) {
@@ -136,9 +124,6 @@ class SettingsActivity : AppCompatActivity() {
         termTypesAuto.setTokenizer(MultiAutoCompleteTextView.CommaTokenizer())
 
         // Set initial slider values
-        daysSinceSlider.value = AppSettings.settings.getWeightDaysSince().toFloat()
-        correctSlider.value = AppSettings.settings.getWeightCorrect().toFloat()
-        testedSlider.value = AppSettings.settings.getWeightTested().toFloat()
         topNValue = AppSettings.settings.getCurrentTopN()
         delayValue = AppSettings.settings.getAllowRepeatsAfter()
 
@@ -187,14 +172,11 @@ class SettingsActivity : AppCompatActivity() {
                 .distinct()
             AppSettings.settings.setSettings(
                 allLists,
-                daysSinceSlider.value.toDouble(),
-                correctSlider.value.toDouble(),
-                testedSlider.value.toDouble(),
                 delayEditText.text.toString().toIntOrNull() ?: delayValue,
                 radioTopN.isChecked,
                 topNEditText.text.toString().toIntOrNull() ?: topNValue
             )
-            recalculateAllLists(this)
+            //recalculateAllLists(this)
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }

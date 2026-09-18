@@ -38,9 +38,6 @@ class SettingsManager(context: Context) {
     private fun createDefaultSettings(): JSONObject {
         return JSONObject().apply {
             put("lists", JSONArray())
-            put("weightDaysSince", 1.0)
-            put("weightCorrect", 1.0)
-            put("weightTested", 1.0)
             put("allowRepeatsAfter", 15)
             put("showTermFirst", true)
             put("isTopNSelected", false)
@@ -63,9 +60,6 @@ class SettingsManager(context: Context) {
     // SETTINGS
     // ==================
 
-    fun getWeightDaysSince() = settings.optDouble("weightDaysSince", 1.0)
-    fun getWeightCorrect() = settings.optDouble("weightCorrect", 1.0)
-    fun getWeightTested() = settings.optDouble("weightTested", 1.0)
     fun getAllowRepeatsAfter() = settings.optInt("allowRepeatsAfter", 15)
     fun getShowTermFirst() = settings.optBoolean("showTermFirst", true)
     fun getIsTopNSelected() = settings.optBoolean("isTopNSelected", false)
@@ -73,9 +67,6 @@ class SettingsManager(context: Context) {
 
     fun setSettings(
         lists: MutableList<VocabList>,
-        weightDaysSince: Double,
-        weightCorrect: Double,
-        weightTested: Double,
         allowRepeatsAfter: Int,
         isTopNSelected: Boolean,
         currentTopN: Int,
@@ -86,9 +77,6 @@ class SettingsManager(context: Context) {
             array.put(list.toJson())
         }
         settings.put("lists", array)
-        settings.put("weightDaysSince", weightDaysSince)
-        settings.put("weightCorrect", weightCorrect)
-        settings.put("weightTested", weightTested)
         settings.put("allowRepeatsAfter", allowRepeatsAfter)
         settings.put("isTopNSelected", isTopNSelected)
         settings.put("currentTopN", currentTopN)

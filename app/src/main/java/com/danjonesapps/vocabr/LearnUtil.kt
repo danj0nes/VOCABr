@@ -48,8 +48,8 @@ fun saveResult(
         row.setDateLastTested(showTermFirst, dateTested)
         row.setAvgLearntScore(
             showTermFirst,
-            0.1 * row.learntScore(showTermFirst) + (1 - 0.1) * row.avgLearntScore(showTermFirst)
-        ) // need to set param !!!
+            AppSettings.BOOST_NEW_WEIGHT * row.learntScore(showTermFirst) + (1 - AppSettings.BOOST_NEW_WEIGHT) * row.avgLearntScore(showTermFirst)
+        )
     }
     calcLearntScores(
         filteredTerms,

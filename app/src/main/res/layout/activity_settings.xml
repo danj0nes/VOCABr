@@ -13,6 +13,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <com.danjonesapps.vocabr.DiagonalBackgroundView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <!-- Main Title -->
         <TextView
             android:id="@+id/settings_title"
@@ -198,113 +206,6 @@
                         android:textSize="27dp" />
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Days Since Title -->
-                <TextView
-                    android:id="@+id/settings_learn_days_since_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_learn_days_since_title"
-                    android:textColor="@color/term_white_def"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="15dp"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/learn_header_card"
-                    app:layout_constraintStart_toStartOf="parent" />
-
-                <!-- Days Since Slider -->
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/settings_days_since_slider"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0.0"
-                    android:valueTo="1.0"
-                    app:trackHeight="6dp"
-                    app:thumbRadius="12dp"
-                    app:thumbElevation="0dp"
-                    android:paddingVertical="5dp"
-                    app:haloColor="@color/card_gray"
-                    app:trackColor="@color/term_white_def"
-                    app:trackColorInactive="@color/term_white_def"
-                    android:layout_marginHorizontal="10dp"
-                    app:labelBehavior="gone"
-                    app:thumbColor="@color/term_white_def_high"
-                    app:layout_constraintTop_toBottomOf="@id/settings_learn_days_since_title"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
-                <!-- Correct Title -->
-                <TextView
-                    android:id="@+id/settings_learn_correct_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_learn_correct_title"
-                    android:textColor="@color/term_white_def"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="15dp"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/settings_days_since_slider"
-                    app:layout_constraintStart_toStartOf="parent" />
-
-                <!-- Correct Slider -->
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/settings_correct_slider"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0.0"
-                    android:valueTo="1.0"
-                    app:trackHeight="6dp"
-                    app:thumbRadius="12dp"
-                    app:thumbElevation="0dp"
-                    app:haloColor="@color/card_gray"
-                    app:trackColor="@color/term_white_def"
-                    app:trackColorInactive="@color/term_white_def"
-                    android:layout_marginHorizontal="10dp"
-                    app:labelBehavior="gone"
-                    app:thumbColor="@color/term_white_def_high"
-                    app:layout_constraintTop_toBottomOf="@id/settings_learn_correct_title"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
-                <!-- Tested Title -->
-                <TextView
-                    android:id="@+id/settings_learn_tested_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_learn_tested_title"
-                    android:textColor="@color/term_white_def"
-                    android:fontFamily="@font/cascadia_mono"
-                    android:textStyle="bold"
-                    android:textSize="15dp"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/settings_correct_slider"
-                    app:layout_constraintStart_toStartOf="parent" />
-
-                <!-- Tested Slider -->
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/settings_tested_slider"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:valueFrom="0.0"
-                    android:valueTo="1.0"
-                    app:thumbElevation="0dp"
-                    app:trackHeight="6dp"
-                    app:thumbRadius="12dp"
-                    app:haloColor="@color/card_gray"
-                    app:trackColor="@color/term_white_def"
-                    app:trackColorInactive="@color/term_white_def"
-                    android:layout_marginHorizontal="10dp"
-                    app:labelBehavior="gone"
-                    android:layout_marginBottom="5dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/settings_learn_tested_title"
-                    app:thumbColor="@color/term_white_def_high" />
-
                 <!-- Delay Title -->
                 <TextView
                     android:id="@+id/settings_learn_delay_title"
@@ -317,7 +218,7 @@
                     android:textSize="15dp"
                     android:layout_marginStart="15dp"
                     android:layout_marginTop="5dp"
-                    app:layout_constraintTop_toBottomOf="@id/settings_tested_slider"
+                    app:layout_constraintTop_toBottomOf="@id/learn_header_card"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <!-- Delay Input -->

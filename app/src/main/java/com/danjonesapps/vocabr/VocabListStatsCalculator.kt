@@ -162,7 +162,7 @@ fun sortTerms(terms: MutableList<TermData>, showTermFirst: Boolean=true) {
 fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false, predicted: Boolean=true) {
     fun calcGap(dateLastTested: Instant?): Double {
         return dateLastTested?.let {
-            abs(Duration.between(it, Instant.now()).toMillis() / 86_400_000.0) / 550.0 // divided here by lambda param (~18 months)
+            abs(Duration.between(it, Instant.now()).toMillis() / 86_400_000.0) / AppSettings.MASTERY_AGE
         } ?: 0.0
     }
 
