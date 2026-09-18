@@ -3,10 +3,10 @@ package com.danjonesapps.vocabr
 data class VocabListStats(
     val numTerms: Int, // overall non filtered
     val filteredNumTerms: Int, // combined
-    val termLearntScore: Double, // overall non filtered
-    val defLearntScore: Double, // overall non filtered
-    val filteredTermLearntScore: Double, // filtered
-    val filteredDefLearntScore: Double, // filtered
+    val termLearntScore: Int, // overall non filtered
+    val defLearntScore: Int, // overall non filtered
+    val filteredTermLearntScore: Int, // filtered
+    val filteredDefLearntScore: Int, // filtered
     val termDateLastTested: String, // overall non filtered
     val defDateLastTested: String,
     val allTermTypes: List<String>,

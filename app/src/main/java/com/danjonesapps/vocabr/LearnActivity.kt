@@ -105,7 +105,7 @@ class LearnActivity : AppCompatActivity() {
 
         recentLength = minOf(filteredTerms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
 
-        dueCount = terms.count { it.rememberingProbability(showTermFirst) < 0.7 } // need to calc threshold
+        dueCount = terms.count { it.rememberingProbability(showTermFirst) <= AppSettings.TARGET_GAP_PROBABILITY }
 
         showTerm()
 
@@ -135,7 +135,7 @@ class LearnActivity : AppCompatActivity() {
                 termSubTextView.text = topTerm.termData.ipa
                 termSubTextView.visibility = View.VISIBLE
             }
-            examplesCard.visibility = View.GONE
+            examplesCard.visibility = View.INVISIBLE
         }
         else {
             termTextView.text = topTerm.termData.vocabDef(showTermFirst)
@@ -158,11 +158,11 @@ class LearnActivity : AppCompatActivity() {
             if (hasNoExamples) {
                 examplesHintTextView.visibility = View.VISIBLE
                 examples.forEach { (_, _, views) ->
-                    views.first.visibility = View.GONE
-                    views.second.visibility = View.GONE
+                    views.first.visibility = View.INVISIBLE
+                    views.second.visibility = View.INVISIBLE
                 }
             } else {
-                examplesHintTextView.visibility = View.GONE
+                examplesHintTextView.visibility = View.INVISIBLE
                 examples.forEach { (example, def, views) ->
                     if (!example.isNullOrEmpty() && !def.isNullOrEmpty()) {
                         views.first.apply {
@@ -174,8 +174,8 @@ class LearnActivity : AppCompatActivity() {
                             visibility = View.VISIBLE
                         }
                     } else {
-                        views.first.visibility = View.GONE
-                        views.second.visibility = View.GONE
+                        views.first.visibility = View.INVISIBLE
+                        views.second.visibility = View.INVISIBLE
                     }
                 }
             }

@@ -10,26 +10,38 @@ import java.util.UUID
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs as abs
 
+const val minsInDay = 1440.0
+const val multiFactor = AppSettings.FINAL_TARGET_GAP.toDouble() * minsInDay
+// coordinate 1 is (0, multiFactor)
+val decayCoordX = AppSettings.decayDefiningCoord.first / AppSettings.MASTERY_AGE
+val decayCoordY = (1.0 / (AppSettings.decayDefiningCoord.second * minsInDay)) * multiFactor
+
+val decayConstantA = ((decayCoordX * decayCoordY) * (multiFactor - 1)) / (multiFactor - decayCoordY)
+val decayConstantB = (decayCoordX * decayCoordY) / (multiFactor - decayCoordY)
+
+val targetArea = calcArea(decayCoordX, AppSettings.decayDefiningCoord.second / AppSettings.MASTERY_AGE)
+val probabilityConstant = (1.0 - AppSettings.TARGET_GAP_PROBABILITY) / (targetArea * AppSettings.TARGET_GAP_PROBABILITY)
+
 fun calculateListStats(
     terms: List<TermData>,
     vocabList: VocabList
 ) {
     val termLearntScore =
         if (terms.isEmpty()) {
-            0.0
+            0
         } else {
-            terms.map {
+            (terms.map {
                 minOf(it.learntScore(true), 1.0)
-            }.average().toInt() * 100.0
+            }.average() * 100.0).toInt()
         }
 
     val defLearntScore =
         if (terms.isEmpty()) {
-            0.0
+            0
         } else {
-            terms.map {
+            (terms.map {
                 minOf(it.learntScore(false), 1.0)
-            }.average().toInt() * 100.0
+            }.average() * 100.0).toInt()
         }
 
     fun formatLastTested(instant: Instant?): String {
@@ -68,24 +80,24 @@ fun calculateListStats(
 
     val filteredTermLearntScore =
         if (filteredTerms.isEmpty()) {
-            0.0
+            0
         } else {
-            filteredTerms.map {
-                minOf(it.learntScore(true), 0.0)
-            }.average().toInt() * 100.0
+            (filteredTerms.map {
+                minOf(it.learntScore(true), 1.0)
+            }.average() * 100.0).toInt()
         }
 
     val filteredDefLearntScore =
         if (filteredTerms.isEmpty()) {
-            0.0
+            0
         } else {
-            filteredTerms.map {
-                minOf(it.learntScore(false), 0.0)
-            }.average().toInt() * 100.0
+            (filteredTerms.map {
+                minOf(it.learntScore(false), 1.0)
+            }.average() * 100.0).toInt()
         }
 
-    val termDueCount = terms.count { it.rememberingProbability(true) < 0.7 } // need to calc threshold
-    val defDueCount = terms.count { it.rememberingProbability(false) < 0.7 } // need to calc threshold
+    val termDueCount = terms.count { it.rememberingProbability(true) <= AppSettings.TARGET_GAP_PROBABILITY }
+    val defDueCount = terms.count { it.rememberingProbability(false) <= AppSettings.TARGET_GAP_PROBABILITY }
 
     vocabList.cachedStats = VocabListStats(
         numTerms = terms.size,
@@ -159,21 +171,31 @@ fun sortTerms(terms: MutableList<TermData>, showTermFirst: Boolean=true) {
     terms.sortBy { it.rememberingProbability(showTermFirst) }
 }
 
+fun calcGap(dateLastTested: Instant?): Double {
+    return dateLastTested?.let {
+        abs(Duration.between(it, Instant.now()).toMillis() / 86_400_000.0) / AppSettings.MASTERY_AGE
+    } ?: 0.0
+}
+
+fun calcArea(learntScore: Double, gap: Double): Double {
+    val frequency = 1 + decayConstantA / (learntScore + decayConstantB)
+    return frequency * gap
+}
+
+fun calcProbability(area: Double): Double {
+    return 1.0 / (1.0 + probabilityConstant * area)
+}
+
+fun calcProbability(learntScore: Double, gap: Double): Double {
+    if (gap == 0.0) return 1.0
+    return calcProbability(calcArea(learntScore, gap))
+}
+
 fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false, predicted: Boolean=true) {
-    fun calcGap(dateLastTested: Instant?): Double {
-        return dateLastTested?.let {
-            abs(Duration.between(it, Instant.now()).toMillis() / 86_400_000.0) / AppSettings.MASTERY_AGE
-        } ?: 0.0
-    }
-
-    fun calcProbability(learntScore: Double, gap: Double): Double {
-        return 0.0 // !!!
-    }
-
     fun calcLearntScore(learntScore: Double, avgLearntScore: Double, probability: Double, gap: Double, predicted: Boolean): Double {
         val boost = maxOf(avgLearntScore - learntScore, 0.0)
         val score = learntScore + gap * (probability + boost)
-        return if (predicted) probability * score else probability
+        return if (predicted) probability * score else score
     }
 
     // Select rows to update

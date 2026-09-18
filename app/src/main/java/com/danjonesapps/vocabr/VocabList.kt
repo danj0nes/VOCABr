@@ -1,6 +1,8 @@
 package com.danjonesapps.vocabr
 
+import com.opencsv.bean.AbstractBeanField
 import com.opencsv.bean.CsvBindByName
+import com.opencsv.bean.CsvCustomBindByName
 import java.time.Instant
 
 data class VocabList(
@@ -11,6 +13,16 @@ data class VocabList(
     var maxListNumber: Int,
     var cachedStats: VocabListStats? = null
 )
+
+class InstantConverter : AbstractBeanField<Instant?, String>() {
+    override fun convert(value: String?): Instant? {
+        return if (value.isNullOrBlank()) {
+            null
+        } else {
+            Instant.parse(value.trim())
+        }
+    }
+}
 
 data class TermData(
     @CsvBindByName(column = "UNIQUE_ID")
@@ -27,9 +39,9 @@ data class TermData(
     var listNumber: Int = -1, // GETS REWRITTEN ON LOAD IF MISSING
     @CsvBindByName(column = "TERM_TYPE")
     var termType: String = "term_type",
-    @CsvBindByName(column = "TERM_DATE_LAST_TESTED")
+    @CsvCustomBindByName(column = "TERM_DATE_LAST_TESTED", converter = InstantConverter::class)
     private var termDateLastTested: Instant? = null,
-    @CsvBindByName(column = "DEF_DATE_LAST_TESTED")
+    @CsvCustomBindByName(column = "DEF_DATE_LAST_TESTED", converter = InstantConverter::class)
     private var defDateLastTested: Instant? = null,
     @CsvBindByName(column = "TERM_AVG_LEARNT_SCORE")
     private var termAvgLearntScore: Double = 0.0,
