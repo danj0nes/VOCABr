@@ -31,7 +31,7 @@ fun calculateListStats(
             0
         } else {
             (terms.map {
-                minOf(it.learntScore(true), 1.0)
+                minOf(it.predictedLearntScore(true), 1.0)
             }.average() * 100.0).toInt()
         }
 
@@ -40,7 +40,7 @@ fun calculateListStats(
             0
         } else {
             (terms.map {
-                minOf(it.learntScore(false), 1.0)
+                minOf(it.predictedLearntScore(false), 1.0)
             }.average() * 100.0).toInt()
         }
 
@@ -83,7 +83,7 @@ fun calculateListStats(
             0
         } else {
             (filteredTerms.map {
-                minOf(it.learntScore(true), 1.0)
+                minOf(it.predictedLearntScore(true), 1.0)
             }.average() * 100.0).toInt()
         }
 
@@ -92,12 +92,26 @@ fun calculateListStats(
             0
         } else {
             (filteredTerms.map {
-                minOf(it.learntScore(false), 1.0)
+                minOf(it.predictedLearntScore(false), 1.0)
             }.average() * 100.0).toInt()
         }
 
+    val filteredTermLastTested = filteredTerms
+        .mapNotNull { it.dateLastTested(true) }
+        .maxOrNull()
+        ?.let { formatLastTested(it) }
+        ?: ""
+
+    val filteredDefLastTested = filteredTerms
+        .mapNotNull { it.dateLastTested(false) }
+        .maxOrNull()
+        ?.let { formatLastTested(it) }
+        ?: ""
+
     val termDueCount = terms.count { it.rememberingProbability(true) <= AppSettings.TARGET_GAP_PROBABILITY }
     val defDueCount = terms.count { it.rememberingProbability(false) <= AppSettings.TARGET_GAP_PROBABILITY }
+    val filteredTermDueCount = filteredTerms.count { it.rememberingProbability(true) <= AppSettings.TARGET_GAP_PROBABILITY }
+    val filteredDefDueCount = filteredTerms.count { it.rememberingProbability(false) <= AppSettings.TARGET_GAP_PROBABILITY }
 
     vocabList.cachedStats = VocabListStats(
         numTerms = terms.size,
@@ -108,11 +122,15 @@ fun calculateListStats(
         filteredDefLearntScore = filteredDefLearntScore,
         termDateLastTested = termLastTested,
         defDateLastTested = defLastTested,
+        filteredTermDateLastTested = filteredTermLastTested,
+        filteredDefDateLastTested = filteredDefLastTested,
         allTermTypes = allTermTypes,
         minListNumber = terms.minOf { it.listNumber },
         maxListNumber = terms.maxOf { it.listNumber},
         termDueCount = termDueCount,
-        defDueCount = defDueCount
+        defDueCount = defDueCount,
+        filteredTermDueCount = filteredTermDueCount,
+        filteredDefDueCount = filteredDefDueCount
     )
 }
 
@@ -128,8 +146,8 @@ fun recalculateAllLists(context: Context) {
         if (!file.exists()) return@forEach
 
         val terms = loadTermDataFromCsv(file).toMutableList()
-        calcLearntScores(terms)
-        calcLearntScores(terms, showTermFirst = true)
+        calcScores(terms, predictedLearntScoreOnly = true)
+        calcScores(terms, showTermFirst = true, predictedLearntScoreOnly = true)
         sortTerms(terms)
         saveTermDataToCsv(terms, file)
         calculateListStats(terms, vocabList)
@@ -139,8 +157,8 @@ fun recalculateAllLists(context: Context) {
 
 fun calculateNewList(file: File, fileName: String): VocabList {
     val terms = loadTermDataFromCsv(file).toMutableList()
-    calcLearntScores(terms)
-    calcLearntScores(terms, showTermFirst = true)
+    calcScores(terms, predictedLearntScoreOnly = true)
+    calcScores(terms, showTermFirst = true, predictedLearntScoreOnly = true)
     sortTerms(terms)
     saveTermDataToCsv(terms, file)
 
@@ -155,6 +173,20 @@ fun calculateNewList(file: File, fileName: String): VocabList {
     )
     calculateListStats(terms, vocabList)
     return vocabList
+}
+
+fun recalculateList(context: Context, listId: String) {
+    val allLists = AppSettings.settings.getAllLists()
+    val vocabList = allLists.find { it.id == listId } ?: return
+    val file = File(context.filesDir, vocabList.fileName)
+    if (!file.exists()) return
+    val terms = loadTermDataFromCsv(file).toMutableList()
+    calcScores(terms, predictedLearntScoreOnly = true)
+    calcScores(terms, showTermFirst = true, predictedLearntScoreOnly = true)
+    sortTerms(terms)
+    saveTermDataToCsv(terms, file)
+    calculateListStats(terms, vocabList)
+    AppSettings.settings.setLists(allLists)
 }
 
 fun calculateList(listId: String, terms: List<TermData>) {
@@ -191,11 +223,11 @@ fun calcProbability(learntScore: Double, gap: Double): Double {
     return calcProbability(calcArea(learntScore, gap))
 }
 
-fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false, predicted: Boolean=true) {
-    fun calcLearntScore(learntScore: Double, avgLearntScore: Double, probability: Double, gap: Double, predicted: Boolean): Double {
+fun calcScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false, predictedLearntScoreOnly: Boolean=true) {
+    fun calcLearntScores(learntScore: Double, avgLearntScore: Double, probability: Double, gap: Double): Pair<Double, Double> {
         val boost = maxOf(avgLearntScore - learntScore, 0.0)
         val score = learntScore + gap * (probability + boost)
-        return if (predicted) probability * score else score
+        return Pair(score, score * probability)
     }
 
     // Select rows to update
@@ -220,14 +252,16 @@ fun calcLearntScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, 
         val probability = calcProbability(termData.learntScore(showTermFirst), gap)
         termData.setRememberingProbability(showTermFirst, probability)
 
-        val learntScore = calcLearntScore(
+        val (learntScore, predictedLearntScore) = calcLearntScores(
             termData.learntScore(showTermFirst),
             termData.avgLearntScore(showTermFirst),
             probability = probability,
-            gap = gap,
-            predicted = predicted
+            gap = gap
         )
 
-        termData.setLearntScore(showTermFirst, learntScore)
+        termData.setPredictedLearntScore(showTermFirst, predictedLearntScore)
+        if (!predictedLearntScoreOnly) {
+            termData.setLearntScore(showTermFirst, learntScore)
+        }
     }
 }

@@ -33,14 +33,15 @@ fun saveResult(
         val row = filteredTerms.find { it.uniqueId == id } ?: continue
 
         if (isCorrect) {
-            calcLearntScores(
+            calcScores(
                 filteredTerms,
                 uniqueIds = recent.map { it.uniqueId },
-                showTermFirst = true,
-                predicted = false
+                showTermFirst = showTermFirst,
+                predictedLearntScoreOnly = false
             )
         } else {
             row.setLearntScore(showTermFirst, 0.0)
+            row.setPredictedLearntScore(showTermFirst, 0.0)
             row.setRememberingProbability(showTermFirst, 0.0)
             repeatIncorrectIds.add(Pair(id, index + recentGap))
         }
@@ -51,9 +52,10 @@ fun saveResult(
             AppSettings.BOOST_NEW_WEIGHT * row.learntScore(showTermFirst) + (1 - AppSettings.BOOST_NEW_WEIGHT) * row.avgLearntScore(showTermFirst)
         )
     }
-    calcLearntScores(
+    calcScores(
         filteredTerms,
-        showTermFirst = showTermFirst
+        showTermFirst = showTermFirst,
+        predictedLearntScoreOnly = true
     )
     sortTerms(filteredTerms, showTermFirst)
 }

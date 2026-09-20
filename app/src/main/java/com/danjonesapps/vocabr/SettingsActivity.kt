@@ -176,7 +176,7 @@ class SettingsActivity : AppCompatActivity() {
                 radioTopN.isChecked,
                 topNEditText.text.toString().toIntOrNull() ?: topNValue
             )
-            //recalculateAllLists(this)
+            recalculateList(this, vocabList.id)
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }

@@ -100,12 +100,12 @@ class LearnActivity : AppCompatActivity() {
                     it.termType in vocabListObj.termTypes
         }.toMutableList()
 
-        calcLearntScores(filteredTerms, showTermFirst = showTermFirst)
+        calcScores(filteredTerms, showTermFirst = showTermFirst, predictedLearntScoreOnly = true)
         sortTerms(filteredTerms, showTermFirst)
 
         recentLength = minOf(filteredTerms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
 
-        dueCount = terms.count { it.rememberingProbability(showTermFirst) <= AppSettings.TARGET_GAP_PROBABILITY }
+        dueCount = filteredTerms.count { it.rememberingProbability(showTermFirst) <= AppSettings.TARGET_GAP_PROBABILITY }
 
         showTerm()
 

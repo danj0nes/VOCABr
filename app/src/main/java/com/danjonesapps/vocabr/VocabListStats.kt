@@ -9,9 +9,13 @@ data class VocabListStats(
     val filteredDefLearntScore: Int, // filtered
     val termDateLastTested: String, // overall non filtered
     val defDateLastTested: String,
+    val filteredTermDateLastTested: String,
+    val filteredDefDateLastTested: String,
     val allTermTypes: List<String>,
     val minListNumber: Int,
     val maxListNumber: Int,
     val termDueCount: Int,
-    val defDueCount: Int
+    val defDueCount: Int,
+    val filteredTermDueCount: Int,
+    val filteredDefDueCount: Int
 )

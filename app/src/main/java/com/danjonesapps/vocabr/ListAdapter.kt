@@ -76,7 +76,7 @@ class ListAdapter(
                     } ?: 0
 
                 avgLearntScore.text = "${filteredLearntScore}% learnt"
-                numTerms.text = "${item.cachedStats?.numTerms ?: 0}/${item.cachedStats?.filteredNumTerms ?: 0} terms"
+                numTerms.text = "${item.cachedStats?.filteredNumTerms ?: 0}/${item.cachedStats?.numTerms ?: 0} terms"
             } else {
                 avgLearntScore.text = "${learntScore}% learnt"
                 numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
@@ -84,11 +84,21 @@ class ListAdapter(
 
             var due: Int
             if (showTermFirst) {
-                dateLastTested.text = item.cachedStats?.termDateLastTested ?: ""
-                due = item.cachedStats?.termDueCount ?: 0
+                if (isFiltered) {
+                    dateLastTested.text = item.cachedStats?.filteredTermDateLastTested ?: ""
+                    due = item.cachedStats?.filteredTermDueCount ?: 0
+                } else {
+                    dateLastTested.text = item.cachedStats?.termDateLastTested ?: ""
+                    due = item.cachedStats?.termDueCount ?: 0
+                }
             } else {
-                dateLastTested.text = item.cachedStats?.defDateLastTested ?: ""
-                due = item.cachedStats?.defDueCount ?: 0
+                if (isFiltered) {
+                    dateLastTested.text = item.cachedStats?.filteredDefDateLastTested ?: ""
+                    due = item.cachedStats?.filteredDefDueCount ?: 0
+                } else {
+                    dateLastTested.text = item.cachedStats?.defDateLastTested ?: ""
+                    due = item.cachedStats?.defDueCount ?: 0
+                }
             }
 
             if (due == 0) {
