@@ -14,15 +14,18 @@ import androidx.appcompat.app.AppCompatActivity
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.ViewConfiguration
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
 import java.io.File
 import java.time.Instant
+import kotlin.math.abs
 
 class LearnActivity : AppCompatActivity() {
     // buttons and text views
@@ -32,6 +35,8 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var incorrectButton: Button
     private lateinit var termCard: MaterialCardView
     private lateinit var examplesCard: ConstraintLayout
+    private lateinit var examplesScroll: NestedScrollView
+    private lateinit var termLayout: ConstraintLayout
 
     private lateinit var termTypeTextView: TextView
     private lateinit var termTextView: TextView
@@ -128,6 +133,10 @@ class LearnActivity : AppCompatActivity() {
             termSubTextView.setTextColor(getColor(R.color.term_white_def))
         }
         if (!flipped) {
+            val params = termLayout.layoutParams as ConstraintLayout.LayoutParams
+            params.horizontalBias = 0.46f
+            params.verticalBias = 0.46f
+            termLayout.layoutParams = params
             termTextView.text = topTerm.termData.vocab(showTermFirst)
             if (topTerm.termData.ipa.isNullOrEmpty() || !showTermFirst) {
                 termSubTextView.visibility = View.GONE
@@ -135,9 +144,13 @@ class LearnActivity : AppCompatActivity() {
                 termSubTextView.text = topTerm.termData.ipa
                 termSubTextView.visibility = View.VISIBLE
             }
-            examplesCard.visibility = View.INVISIBLE
+            examplesCard.visibility = View.GONE
         }
         else {
+            val params = termLayout.layoutParams as ConstraintLayout.LayoutParams
+            params.horizontalBias = 0f
+            params.verticalBias = 1f
+            termLayout.layoutParams = params
             termTextView.text = topTerm.termData.vocabDef(showTermFirst)
             if (topTerm.termData.ipa.isNullOrEmpty() || showTermFirst) {
                 termSubTextView.text = topTerm.termData.vocab((showTermFirst))
@@ -158,11 +171,11 @@ class LearnActivity : AppCompatActivity() {
             if (hasNoExamples) {
                 examplesHintTextView.visibility = View.VISIBLE
                 examples.forEach { (_, _, views) ->
-                    views.first.visibility = View.INVISIBLE
-                    views.second.visibility = View.INVISIBLE
+                    views.first.visibility = View.GONE
+                    views.second.visibility = View.GONE
                 }
             } else {
-                examplesHintTextView.visibility = View.INVISIBLE
+                examplesHintTextView.visibility = View.GONE
                 examples.forEach { (example, def, views) ->
                     if (!example.isNullOrEmpty() && !def.isNullOrEmpty()) {
                         views.first.apply {
@@ -174,8 +187,8 @@ class LearnActivity : AppCompatActivity() {
                             visibility = View.VISIBLE
                         }
                     } else {
-                        views.first.visibility = View.INVISIBLE
-                        views.second.visibility = View.INVISIBLE
+                        views.first.visibility = View.GONE
+                        views.second.visibility = View.GONE
                     }
                 }
             }
@@ -472,7 +485,9 @@ class LearnActivity : AppCompatActivity() {
 
         termCard = findViewById(R.id.term_card)
         termCard.setOnClickListener { buttonPressed(ButtonCommand.SHOW) }
+        termLayout = findViewById(R.id.term_texts)
         examplesCard = findViewById(R.id.examples)
+        examplesScroll = findViewById(R.id.examples_scroll)
 
         //text views
         termTypeTextView = findViewById(R.id.text_term_type)
@@ -495,5 +510,43 @@ class LearnActivity : AppCompatActivity() {
         clearIcon = findViewById(R.id.clear_icon)
         dimOverlay = findViewById(R.id.dim_overlay)
         recyclerView = findViewById(R.id.term_recycler_view)
+
+        //examples scroll
+        val touchSlop = ViewConfiguration.get(this).scaledTouchSlop
+        var downY = 0f
+
+        examplesScroll.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    downY = event.y
+
+                    // Start the card's pressed/ripple state
+                    termCard.isPressed = true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    // Cancel ripple if the user is actually scrolling
+                    if (abs(event.y - downY) > touchSlop) {
+                        termCard.isPressed = false
+                    }
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    val isTap = abs(event.y - downY) <= touchSlop
+
+                    termCard.isPressed = false
+
+                    if (isTap) {
+                        termCard.performClick()
+                    }
+                }
+
+                MotionEvent.ACTION_CANCEL -> {
+                    termCard.isPressed = false
+                }
+            }
+
+            false
+        }
     }
 }

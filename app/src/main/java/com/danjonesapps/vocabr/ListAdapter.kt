@@ -23,8 +23,7 @@ class ListAdapter(
         itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
         val listName: TextView = itemView.findViewById(R.id.listFileName)
-        val avgLearntScore: TextView = itemView.findViewById(R.id.avgLearntScore)
-        val numTerms: TextView = itemView.findViewById(R.id.numTerms)
+        val subText: TextView = itemView.findViewById(R.id.subText)
         val dateLastTested: TextView = itemView.findViewById(R.id.dateLastTested)
         val dueCount: TextView = itemView.findViewById(R.id.text_due)
         val radioImageView: ImageView = itemView.findViewById(R.id.radio_button)
@@ -75,11 +74,9 @@ class ListAdapter(
                         item.cachedStats?.filteredDefLearntScore
                     } ?: 0
 
-                avgLearntScore.text = "${filteredLearntScore}% learnt"
-                numTerms.text = "${item.cachedStats?.filteredNumTerms ?: 0}/${item.cachedStats?.numTerms ?: 0} terms"
+                subText.text = "${item.cachedStats?.filteredNumTerms ?: 0}/${item.cachedStats?.numTerms ?: 0} terms • ${filteredLearntScore}% learnt"
             } else {
-                avgLearntScore.text = "${learntScore}% learnt"
-                numTerms.text = "${item.cachedStats?.numTerms ?: 0} terms"
+                subText.text = "${item.cachedStats?.numTerms ?: 0} terms • ${learntScore}% learnt"
             }
 
             var due: Int
@@ -122,8 +119,6 @@ class ListAdapter(
                     )
                 )
 
-                numTerms.visibility = View.VISIBLE
-
                 radioImageView.setImageResource(
                     R.drawable.radio_checked
                 )
@@ -136,8 +131,6 @@ class ListAdapter(
                         R.color.button_gray
                     )
                 )
-
-                numTerms.visibility = View.GONE
 
                 radioImageView.setImageResource(
                     R.drawable.radio_unchecked
