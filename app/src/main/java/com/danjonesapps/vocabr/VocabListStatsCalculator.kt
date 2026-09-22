@@ -209,18 +209,27 @@ fun calcGap(dateLastTested: Instant?): Double {
     } ?: 0.0
 }
 
+fun gapToWhenDue(dateLastTested: Instant?, gap: Double): Instant? {
+    val days = gap * AppSettings.MASTERY_AGE
+    return dateLastTested?.plusMillis((days * 86_400_000).toLong())
+}
+
+fun calcFrequency(learntScore: Double): Double {
+    return 1 + decayConstantA / (learntScore + decayConstantB)
+}
+
 fun calcArea(learntScore: Double, gap: Double): Double {
-    val frequency = 1 + decayConstantA / (learntScore + decayConstantB)
-    return frequency * gap
+    return calcFrequency(learntScore) * gap
 }
 
 fun calcProbability(area: Double): Double {
     return 1.0 / (1.0 + probabilityConstant * area)
 }
 
-fun calcProbability(learntScore: Double, gap: Double): Double {
+fun calcProbability(frequency: Double, gap: Double): Double {
     if (gap == 0.0) return 1.0
-    return calcProbability(calcArea(learntScore, gap))
+    val area = frequency * gap
+    return calcProbability(area)
 }
 
 fun calcScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTermFirst: Boolean=false, predictedLearntScoreOnly: Boolean=true) {
@@ -249,8 +258,12 @@ fun calcScores(terms: MutableList<TermData>, uniqueIds: List<Int>?= null, showTe
         }
 
         val gap = calcGap(termData.dateLastTested(showTermFirst))
-        val probability = calcProbability(termData.learntScore(showTermFirst), gap)
+        val frequency = calcFrequency(termData.learntScore(showTermFirst))
+        val probability = calcProbability(frequency, gap)
         termData.setRememberingProbability(showTermFirst, probability)
+
+        val dueGap = targetArea / frequency
+        termData.setDueInstant(showTermFirst, gapToWhenDue(termData.dateLastTested(showTermFirst), dueGap))
 
         val (learntScore, predictedLearntScore) = calcLearntScores(
             termData.learntScore(showTermFirst),

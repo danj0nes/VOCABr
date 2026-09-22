@@ -67,7 +67,10 @@ data class TermData(
     private var defRememberingProbability: Double = 0.0,
 
     private var termPredictedLearntScore: Double = 0.0,
-    private var defPredictedLearntScore: Double = 0.0
+    private var defPredictedLearntScore: Double = 0.0,
+
+    private var termDueInstant: Instant? = null,
+    private var defDueInstant: Instant? = null
 ) {
     fun learntScore(termFirst: Boolean): Double =
         if (termFirst) termLearntScore else defLearntScore
@@ -121,6 +124,17 @@ data class TermData(
             termPredictedLearntScore = value
         } else {
             defPredictedLearntScore = value
+        }
+    }
+
+    fun dueInstant(termFirst: Boolean): Instant? =
+        if (termFirst) termDueInstant else defDueInstant
+
+    fun setDueInstant(termFirst: Boolean, value: Instant?) {
+        if (termFirst) {
+            termDueInstant = value
+        } else {
+            defDueInstant = value
         }
     }
 

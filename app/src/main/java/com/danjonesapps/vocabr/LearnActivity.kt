@@ -23,9 +23,14 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.Job
 import java.io.File
 import java.time.Instant
 import kotlin.math.abs
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.time.Duration
 
 class LearnActivity : AppCompatActivity() {
     // buttons and text views
@@ -68,7 +73,6 @@ class LearnActivity : AppCompatActivity() {
     private var selectedTerm: SelectedTerm? = null
     private var correct: Int = 0
     private var incorrect: Int = 0
-    private var dueCount: Int = 0
     private var recentLength: Int = 0
     private var reversing: Boolean = false
     private var quitting: Boolean = false
@@ -78,6 +82,7 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var csvFile: File
     private lateinit var listId: String
     private var showTermFirst: Boolean = true
+    private var dueJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // android studio defaults
@@ -109,8 +114,6 @@ class LearnActivity : AppCompatActivity() {
         sortTerms(filteredTerms, showTermFirst)
 
         recentLength = minOf(filteredTerms.size - 1, AppSettings.settings.getAllowRepeatsAfter())
-
-        dueCount = filteredTerms.count { it.rememberingProbability(showTermFirst) <= AppSettings.TARGET_GAP_PROBABILITY }
 
         showTerm()
 
@@ -229,12 +232,7 @@ class LearnActivity : AppCompatActivity() {
         }
 
         // SET DUE COUNT
-        if (dueCount > 0) {
-            dueTextView.visibility = View.VISIBLE
-            dueTextView.text = dueCount.toString()
-        } else {
-            dueTextView.visibility = View.GONE
-        }
+        calcAndSetDueCount()
 
         // SET CORRECT AND INCORRECT
         correctTextView.text = correct.toString()
@@ -274,7 +272,6 @@ class LearnActivity : AppCompatActivity() {
                 recent.clear()
                 correct = 0
                 incorrect = 0
-                dueCount = 0
             }
             else { // TERMINATE
                 saveAndTerminate()
@@ -289,9 +286,6 @@ class LearnActivity : AppCompatActivity() {
                     } else {
                         incorrect--
                     }
-                    if (recent.last().wasDue) {
-                        dueCount++
-                    }
                 }
                 futureTerms.add(0, Pair(topTerm.termData.uniqueId, topTerm.repeatIncorrect))
                 reversing = true
@@ -302,12 +296,13 @@ class LearnActivity : AppCompatActivity() {
             }
         }
         else if (buttonCommand == ButtonCommand.NOT) {
+            val dueInstant = topTerm.termData.dueInstant(showTermFirst)
             recent.add(Quint(
                 topTerm.termData.uniqueId,
                 false,
                 topTerm.repeatIncorrect,
                 Instant.now(),
-                dueCount > 0
+                dueInstant == null || !dueInstant.isAfter(Instant.now())
             ))
             if (!topTerm.repeatIncorrect) {
                 incorrect++
@@ -315,12 +310,13 @@ class LearnActivity : AppCompatActivity() {
             continueToNext()
         }
         else if (buttonCommand == ButtonCommand.GOT) {
+            val dueInstant = topTerm.termData.dueInstant(showTermFirst)
             recent.add(Quint(
                 topTerm.termData.uniqueId,
                 true,
                 topTerm.repeatIncorrect,
                 Instant.now(),
-                dueCount > 0
+                dueInstant == null || !dueInstant.isAfter(Instant.now())
             ))
             if (!topTerm.repeatIncorrect) {
                 correct++
@@ -337,10 +333,6 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun continueToNext(){
-        if (dueCount > 0) {
-            dueCount--
-        }
-
         if (recent.size > recentLength) {
             saveResult(filteredTerms, mutableListOf(recent[0]), repeatIncorrectIds, showTermFirst)
             recent.removeAt(0)
@@ -547,6 +539,62 @@ class LearnActivity : AppCompatActivity() {
             }
 
             false
+        }
+    }
+
+    private fun calcAndSetDueCount() {
+        val currentId = selectedTerm?.termData?.uniqueId ?: -1
+        val ids = (recent.map { it.uniqueId } + currentId).toSet()
+
+        val now = Instant.now()
+
+        // what if quitting?
+
+        // should you cancel dueJob when button is pressed? and only start when all lists are set
+
+        val dueCount = terms.count {
+            val due = it.dueInstant(showTermFirst)
+
+            it.uniqueId !in ids &&
+                    (due == null || !due.isAfter(now))
+        }
+
+        // SET DUE COUNT
+        if (dueCount > 0) {
+            dueTextView.visibility = View.VISIBLE
+            dueTextView.text = dueCount.toString()
+        } else {
+            dueTextView.visibility = View.GONE
+        }
+
+        // Find the next due time
+        reschedule()
+    }
+
+    private fun reschedule() {
+        // Cancel the previous scheduled callback
+        dueJob?.cancel()
+
+        val now = Instant.now()
+
+        val nextDue = terms
+            .mapNotNull { it.dueInstant(showTermFirst) }
+            .filter { it.isAfter(now) }
+            .minOrNull()
+
+        // Nothing currently has a future due date
+        if (nextDue == null) {
+            return
+        }
+
+        val delayMillis = Duration
+            .between(now, nextDue)
+            .toMillis()
+
+        dueJob = lifecycleScope.launch {
+            delay(delayMillis)
+
+            calcAndSetDueCount()
         }
     }
 }
