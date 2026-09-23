@@ -18,6 +18,7 @@ import android.view.ViewConfiguration
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.NestedScrollView
@@ -126,15 +127,20 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun setCard(topTerm: SelectedTerm){
+        val primaryTextColour = ContextCompat.getColor(
+            this,
+            if (topTerm.repeatIncorrect) R.color.quitting_yellow else R.color.term_white
+        )
+
+        val secondaryTextColour = ContextCompat.getColor(
+            this,
+            if (topTerm.repeatIncorrect) R.color.quitting_yellow_def else R.color.term_white_def
+        )
+
         // SET TERM
-        if (topTerm.repeatIncorrect) {
-            termTextView.setTextColor(getColor(R.color.quitting_yellow))
-            termSubTextView.setTextColor(getColor(R.color.quitting_yellow_def))
-        }
-        else {
-            termTextView.setTextColor(getColor(R.color.term_white))
-            termSubTextView.setTextColor(getColor(R.color.term_white_def))
-        }
+        termTextView.setTextColor(primaryTextColour)
+        termSubTextView.setTextColor(secondaryTextColour)
+
         if (!flipped) {
             val params = termLayout.layoutParams as ConstraintLayout.LayoutParams
             params.horizontalBias = 0.46f
@@ -184,10 +190,12 @@ class LearnActivity : AppCompatActivity() {
                         views.first.apply {
                             text = example
                             visibility = View.VISIBLE
+                            setTextColor(primaryTextColour)
                         }
                         views.second.apply {
                             text = def
                             visibility = View.VISIBLE
+                            setTextColor(secondaryTextColour)
                         }
                     } else {
                         views.first.visibility = View.GONE
@@ -232,7 +240,17 @@ class LearnActivity : AppCompatActivity() {
         }
 
         // SET DUE COUNT
-        calcAndSetDueCount()
+        if (!quitting) {
+            calcAndSetDueCount()
+        } else {
+            val quittingDueCount = futureTerms.size + repeatIncorrectIds.size - 1
+            if (quittingDueCount > 0) {
+                dueTextView.visibility = View.VISIBLE
+                dueTextView.text = quittingDueCount.toString()
+            } else {
+                dueTextView.visibility = View.GONE
+            }
+        }
 
         // SET CORRECT AND INCORRECT
         correctTextView.text = correct.toString()
@@ -249,6 +267,7 @@ class LearnActivity : AppCompatActivity() {
         val topTerm: SelectedTerm = selectedTerm ?: return // change
 
         if (buttonCommand == ButtonCommand.QUIT) {
+            dueJob?.cancel()
             if (!quitting) {
                 quitting = true
 
@@ -269,6 +288,8 @@ class LearnActivity : AppCompatActivity() {
                     resetFlip = false
                 }
 
+                dueTextView.setBackgroundColor(ContextCompat.getColor(this, R.color.quitting_yellow_def))
+
                 recent.clear()
                 correct = 0
                 incorrect = 0
@@ -280,6 +301,7 @@ class LearnActivity : AppCompatActivity() {
         }
         else if (buttonCommand == ButtonCommand.BACK) {
             if (recent.isNotEmpty()) {
+                dueJob?.cancel()
                 if (!recent.last().repeatIncorrect) {
                     if (recent.last().wasCorrect) {
                         correct--
@@ -296,13 +318,15 @@ class LearnActivity : AppCompatActivity() {
             }
         }
         else if (buttonCommand == ButtonCommand.NOT) {
+            dueJob?.cancel()
             val dueInstant = topTerm.termData.dueInstant(showTermFirst)
+            val now = Instant.now()
             recent.add(Quint(
                 topTerm.termData.uniqueId,
                 false,
                 topTerm.repeatIncorrect,
-                Instant.now(),
-                dueInstant == null || !dueInstant.isAfter(Instant.now())
+                now,
+                dueInstant == null || !dueInstant.isAfter(now)
             ))
             if (!topTerm.repeatIncorrect) {
                 incorrect++
@@ -310,13 +334,15 @@ class LearnActivity : AppCompatActivity() {
             continueToNext()
         }
         else if (buttonCommand == ButtonCommand.GOT) {
+            dueJob?.cancel()
             val dueInstant = topTerm.termData.dueInstant(showTermFirst)
+            val now = Instant.now()
             recent.add(Quint(
                 topTerm.termData.uniqueId,
                 true,
                 topTerm.repeatIncorrect,
-                Instant.now(),
-                dueInstant == null || !dueInstant.isAfter(Instant.now())
+                now,
+                dueInstant == null || !dueInstant.isAfter(now)
             ))
             if (!topTerm.repeatIncorrect) {
                 correct++
@@ -543,15 +569,10 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun calcAndSetDueCount() {
-        val currentId = selectedTerm?.termData?.uniqueId ?: -1
-        val ids = (recent.map { it.uniqueId } + currentId).toSet()
-
         val now = Instant.now()
 
-        // what if quitting?
-
-        // should you cancel dueJob when button is pressed? and only start when all lists are set
-
+        val currentId = selectedTerm?.termData?.uniqueId ?: -1
+        val ids = (recent.map { it.uniqueId } + currentId).toSet()
         val dueCount = terms.count {
             val due = it.dueInstant(showTermFirst)
 
