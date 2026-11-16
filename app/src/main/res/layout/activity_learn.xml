@@ -47,22 +47,6 @@
         tools:ignore="SmallSp" />
 
     <TextView
-        android:id="@+id/text_quitting"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/cascadia_mono"
-        android:text="@string/quitting_text"
-        android:textColor="@color/term_white"
-        android:textSize="18dp"
-        android:visibility="gone"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintVertical_bias="0.174"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
         android:id="@+id/text_correct"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
@@ -113,6 +97,7 @@
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp"
+        app:strokeColor="#9C640A"
         android:clickable="true"
         android:focusable="true"
         android:background="?attr/selectableItemBackgroundBorderless"
@@ -191,7 +176,6 @@
                 android:id="@+id/examples"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginBottom="15dp"
                 android:visibility="visible"
                 app:layout_constraintHeight_percent="0.52"
                 app:layout_constraintBottom_toBottomOf="parent">
@@ -309,6 +293,14 @@
                             app:layout_constraintBottom_toBottomOf="parent"/>
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </androidx.core.widget.NestedScrollView>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bottom_fade"
+                    android:clickable="false"
+                    android:focusable="false"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -46,7 +46,6 @@ class LearnActivity : AppCompatActivity() {
 
     private lateinit var termTypeTextView: TextView
     private lateinit var termTextView: TextView
-    private lateinit var quittingTextView: TextView
     private lateinit var correctTextView: TextView
     private lateinit var incorrectTextView: TextView
     private lateinit var dueTextView: TextView
@@ -140,6 +139,7 @@ class LearnActivity : AppCompatActivity() {
         // SET TERM
         termTextView.setTextColor(primaryTextColour)
         termSubTextView.setTextColor(secondaryTextColour)
+        termTypeTextView.setTextColor(secondaryTextColour)
 
         if (!flipped) {
             val params = termLayout.layoutParams as ConstraintLayout.LayoutParams
@@ -179,6 +179,7 @@ class LearnActivity : AppCompatActivity() {
 
             if (hasNoExamples) {
                 examplesHintTextView.visibility = View.VISIBLE
+                examplesHintTextView.setTextColor(secondaryTextColour)
                 examples.forEach { (_, _, views) ->
                     views.first.visibility = View.GONE
                     views.second.visibility = View.GONE
@@ -235,15 +236,14 @@ class LearnActivity : AppCompatActivity() {
 
         // SET QUITTING
         if (quitting) {
-            quittingTextView.visibility = View.VISIBLE
-            // Could have due count show how many terms left when quitting
+            dueTextView.backgroundTintList = ContextCompat.getColorStateList(this, R.color.quitting_yellow_def)
         }
 
         // SET DUE COUNT
         if (!quitting) {
             calcAndSetDueCount()
         } else {
-            val quittingDueCount = futureTerms.size + repeatIncorrectIds.size - 1
+            val quittingDueCount = futureTerms.size + repeatIncorrectIds.size + 1
             if (quittingDueCount > 0) {
                 dueTextView.visibility = View.VISIBLE
                 dueTextView.text = quittingDueCount.toString()
@@ -287,8 +287,6 @@ class LearnActivity : AppCompatActivity() {
                     futureTerms.add(0, Pair(topTerm.termData.uniqueId, true))
                     resetFlip = false
                 }
-
-                dueTextView.setBackgroundColor(ContextCompat.getColor(this, R.color.quitting_yellow_def))
 
                 recent.clear()
                 correct = 0
@@ -413,7 +411,7 @@ class LearnActivity : AppCompatActivity() {
 
                 val searchQuery = query.lowercase()
 
-                val filteredList = filteredTerms.filter {
+                val filteredList = terms.filter {
                     (it.vocabDef(showTermFirst).lowercase().contains(searchQuery) ||
                             it.vocab(showTermFirst).lowercase().contains(searchQuery)) &&
                             it.uniqueId != selectedTerm?.termData?.uniqueId
@@ -510,7 +508,6 @@ class LearnActivity : AppCompatActivity() {
         //text views
         termTypeTextView = findViewById(R.id.text_term_type)
         termTextView = findViewById(R.id.text_term)
-        quittingTextView = findViewById(R.id.text_quitting)
         correctTextView = findViewById(R.id.text_correct)
         incorrectTextView = findViewById(R.id.text_incorrect)
         dueTextView = findViewById(R.id.text_due)
@@ -571,8 +568,7 @@ class LearnActivity : AppCompatActivity() {
     private fun calcAndSetDueCount() {
         val now = Instant.now()
 
-        val currentId = selectedTerm?.termData?.uniqueId ?: -1
-        val ids = (recent.map { it.uniqueId } + currentId).toSet()
+        val ids = (recent.map { it.uniqueId }).toSet()
         val dueCount = terms.count {
             val due = it.dueInstant(showTermFirst)
 
