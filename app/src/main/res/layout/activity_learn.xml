@@ -97,11 +97,10 @@
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp"
-        app:strokeColor="#9C640A"
         android:clickable="true"
         android:focusable="true"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:backgroundTint="@color/card_gray"
+        android:backgroundTint="@color/card_orange"
         app:rippleColor="#08FFFFFF"
         app:layout_constraintWidth_percent="0.87"
         app:layout_constraintHeight_percent="0.6"
@@ -177,6 +176,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:visibility="visible"
+                android:background="@color/card_dark_orange"
                 app:layout_constraintHeight_percent="0.52"
                 app:layout_constraintBottom_toBottomOf="parent">
 
@@ -186,7 +186,6 @@
                     android:layout_height="match_parent"
                     android:paddingStart="35dp"
                     android:paddingEnd="30dp"
-                    android:background="#2C2E30"
                     app:layout_constraintTop_toTopOf="parent">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
@@ -295,6 +294,7 @@
                 </androidx.core.widget.NestedScrollView>
 
                 <View
+                    android:id="@+id/examples_fade"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:background="@drawable/bottom_fade"

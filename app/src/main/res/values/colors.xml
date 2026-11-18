@@ -5,6 +5,9 @@
     <color name="background_gray">#1E1F22</color>
     <color name="background_light_gray">#252628</color>
     <color name="card_gray">#333639</color>
+    <color name="card_dark_gray">#2C2E30</color>
+    <color name="card_orange">#463C29</color>
+    <color name="card_dark_orange">#362F1D</color>
     <color name="button_gray">#2B2D30</color>
     <color name="search_gray">#404348</color>
     <color name="quitting_yellow">#E7940C</color>

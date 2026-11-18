@@ -57,6 +57,7 @@ class LearnActivity : AppCompatActivity() {
     private lateinit var exampleOneDefTextView: TextView
     private lateinit var exampleTwoDefTextView: TextView
     private lateinit var exampleThreeDefTextView: TextView
+    private lateinit var examplesFade: View
 
     private lateinit var recyclerView: CustomRecyclerView
     private lateinit var adapter: TermAdapter
@@ -126,20 +127,21 @@ class LearnActivity : AppCompatActivity() {
     }
 
     private fun setCard(topTerm: SelectedTerm){
-        val primaryTextColour = ContextCompat.getColor(
+        val primaryTextColour = ContextCompat.getColorStateList(
             this,
-            if (topTerm.repeatIncorrect) R.color.quitting_yellow else R.color.term_white
+            if (topTerm.repeatIncorrect) R.color.card_orange else R.color.card_gray
         )
 
         val secondaryTextColour = ContextCompat.getColor(
             this,
-            if (topTerm.repeatIncorrect) R.color.quitting_yellow_def else R.color.term_white_def
+            if (topTerm.repeatIncorrect) R.color.card_dark_orange else R.color.card_dark_gray
         )
 
-        // SET TERM
-        termTextView.setTextColor(primaryTextColour)
-        termSubTextView.setTextColor(secondaryTextColour)
-        termTypeTextView.setTextColor(secondaryTextColour)
+        termCard.backgroundTintList = primaryTextColour
+        examplesCard.setBackgroundColor(secondaryTextColour)
+        examplesFade.background = ContextCompat.getDrawable(this,
+            if (topTerm.repeatIncorrect) R.drawable.bottom_fade_orange else R.drawable.bottom_fade)
+        examplesScroll.scrollTo(0,0)
 
         if (!flipped) {
             val params = termLayout.layoutParams as ConstraintLayout.LayoutParams
@@ -179,7 +181,6 @@ class LearnActivity : AppCompatActivity() {
 
             if (hasNoExamples) {
                 examplesHintTextView.visibility = View.VISIBLE
-                examplesHintTextView.setTextColor(secondaryTextColour)
                 examples.forEach { (_, _, views) ->
                     views.first.visibility = View.GONE
                     views.second.visibility = View.GONE
@@ -191,12 +192,10 @@ class LearnActivity : AppCompatActivity() {
                         views.first.apply {
                             text = example
                             visibility = View.VISIBLE
-                            setTextColor(primaryTextColour)
                         }
                         views.second.apply {
                             text = def
                             visibility = View.VISIBLE
-                            setTextColor(secondaryTextColour)
                         }
                     } else {
                         views.first.visibility = View.GONE
@@ -512,6 +511,7 @@ class LearnActivity : AppCompatActivity() {
         incorrectTextView = findViewById(R.id.text_incorrect)
         dueTextView = findViewById(R.id.text_due)
         termSubTextView = findViewById(R.id.text_sub_term)
+        examplesFade = findViewById(R.id.examples_fade)
         examplesHintTextView = findViewById(R.id.examples_hint)
         exampleOneTextView = findViewById(R.id.example_1)
         exampleTwoTextView = findViewById(R.id.example_2)
@@ -569,7 +569,7 @@ class LearnActivity : AppCompatActivity() {
         val now = Instant.now()
 
         val ids = (recent.map { it.uniqueId }).toSet()
-        val dueCount = terms.count {
+        val dueCount = filteredTerms.count {
             val due = it.dueInstant(showTermFirst)
 
             it.uniqueId !in ids &&
@@ -594,7 +594,7 @@ class LearnActivity : AppCompatActivity() {
 
         val now = Instant.now()
 
-        val nextDue = terms
+        val nextDue = filteredTerms
             .mapNotNull { it.dueInstant(showTermFirst) }
             .filter { it.isAfter(now) }
             .minOrNull()
